@@ -1,0 +1,129 @@
+{% load static ui %}<!doctype html>
+<html lang="uz">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Davomat{% endblock %} · Yuzni tanish orqali davomat</title>
+  <link rel="stylesheet" href="{% static 'css/app.css' %}">
+  {% block head %}{% endblock %}
+</head>
+<body class="{% if user.is_authenticated %}has-shell{% else %}no-shell{% endif %}">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></symbol>
+    <symbol id="i-sessions" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4M8 14l2.5 2.5L16 12"/></symbol>
+    <symbol id="i-camera" viewBox="0 0 24 24"><path d="M15 10l5-3v10l-5-3z"/><rect x="2" y="6" width="13" height="12" rx="2"/></symbol>
+    <symbol id="i-students" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.6 3.3-5.5 6.5-5.5s5.9 1.9 6.5 5.5"/><circle cx="17" cy="9" r="2.5"/><path d="M16 14.6c2.6.1 4.8 1.7 5.3 4.9"/></symbol>
+    <symbol id="i-room" viewBox="0 0 24 24"><path d="M4 21V5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v16M2 21h20M14 12h.01"/></symbol>
+    <symbol id="i-class" viewBox="0 0 24 24"><path d="M2 8l10-5 10 5-10 5z"/><path d="M6 10.5V16c2 2 10 2 12 0v-5.5M22 8v6"/></symbol>
+    <symbol id="i-users" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c.8-4 4-6 8-6s7.2 2 8 6"/></symbol>
+    <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></symbol>
+    <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></symbol>
+    <symbol id="i-chart" viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/></symbol>
+    <symbol id="i-audit" viewBox="0 0 24 24"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h5"/></symbol>
+    <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></symbol>
+    <symbol id="i-logout" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></symbol>
+    <symbol id="i-menu" viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h18"/></symbol>
+    <symbol id="i-face" viewBox="0 0 24 24"><path d="M3 8V5a2 2 0 0 1 2-2h3M16 3h3a2 2 0 0 1 2 2v3M21 16v3a2 2 0 0 1-2 2h-3M8 21H5a2 2 0 0 1-2-2v-3"/><circle cx="12" cy="10" r="3"/><path d="M7.5 17.5c1-1.8 2.6-2.7 4.5-2.7s3.5.9 4.5 2.7"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 3 2 20h20z"/><path d="M12 10v4M12 17h.01"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 4v16l13-8z"/></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6M10 11v6M14 11v6"/></symbol>
+    <symbol id="i-radio" viewBox="0 0 24 24"><circle cx="12" cy="12" r="2.5"/><path d="M16.2 7.8a6 6 0 0 1 0 8.4M7.8 16.2a6 6 0 0 1 0-8.4M19 5a10 10 0 0 1 0 14M5 19A10 10 0 0 1 5 5"/></symbol>
+  </defs>
+</svg>
+
+{% if user.is_authenticated %}
+{% with u=request.resolver_match.url_name|default:"" %}
+<div class="shell">
+  <aside class="sidebar" id="sidebar">
+    <a class="sb-brand" href="{% url 'dashboard' %}">
+      <span class="sb-logo"><svg class="ic"><use href="#i-face"/></svg></span>
+      <span><b>Davomat</b><small>Yuzni tanish tizimi</small></span>
+    </a>
+    <nav class="sb-nav" aria-label="Asosiy menyu">
+      <div class="sb-section">Asosiy</div>
+      <a href="{% url 'dashboard' %}" class="{% if u == 'dashboard' %}active{% endif %}"><svg class="ic"><use href="#i-home"/></svg>Bosh sahifa</a>
+      {% if user.is_admin %}
+      <div class="sb-section">Sessiyalar</div>
+      <a href="{% url 'manage_sessions' %}" class="{% if 'session' in u and request.GET.status != 'live' %}active{% endif %}"><svg class="ic"><use href="#i-sessions"/></svg>Barcha sessiyalar</a>
+      <a href="{% url 'manage_sessions' %}?status=live" class="{% if u == 'manage_sessions' and request.GET.status == 'live' %}active{% endif %}"><svg class="ic"><use href="#i-radio"/></svg>Faol sessiyalar</a>
+      {% else %}
+      <a href="{% url 'session_list' %}" class="{% if 'session' in u %}active{% endif %}"><svg class="ic"><use href="#i-sessions"/></svg>Sessiyalar</a>
+      {% endif %}
+      {% if user.is_admin %}
+      <div class="sb-section">Oʻquvchilar bazasi</div>
+      <a href="{% url 'sinflar_list' %}" class="{% if 'sinflar' in u %}active{% endif %}"><svg class="ic"><use href="#i-class"/></svg>Sinflar</a>
+      <a href="{% url 'students' %}" class="{% if u == 'students' or 'oquvchilar' in u %}active{% endif %}"><svg class="ic"><use href="#i-students"/></svg>Oʻquvchilar</a>
+      <a href="{% url 'photos' %}" class="{% if u == 'photos' %}active{% endif %}"><svg class="ic"><use href="#i-face"/></svg>Yuz rasmlari</a>
+
+      <div class="sb-section">Nazorat</div>
+      <a href="{% url 'cameras' %}" class="{% if u == 'cameras' or 'kameralar' in u %}active{% endif %}"><svg class="ic"><use href="#i-camera"/></svg>Kameralar nazorati</a>
+
+      <div class="sb-section">Maʼlumotnomalar</div>
+      <a href="{% url 'manage_index' %}" class="{% if u == 'manage_index' %}active{% endif %}"><svg class="ic"><use href="#i-grid"/></svg>Umumiy koʻrinish</a>
+      <a href="{% url 'xonalar_list' %}" class="{% if 'xonalar' in u %}active{% endif %}"><svg class="ic"><use href="#i-room"/></svg>Xonalar</a>
+      <a href="{% url 'foydalanuvchilar_list' %}" class="{% if 'foydalanuvchilar' in u %}active{% endif %}"><svg class="ic"><use href="#i-users"/></svg>Foydalanuvchilar</a>
+      <a href="{% url 'biriktiruvlar_list' %}" class="{% if 'biriktiruvlar' in u %}active{% endif %}"><svg class="ic"><use href="#i-link"/></svg>Biriktiruvlar</a>
+
+      <div class="sb-section">Tahlil va sozlamalar</div>
+      <a href="{% url 'pilot' %}" class="{% if u == 'pilot' %}active{% endif %}"><svg class="ic"><use href="#i-chart"/></svg>Pilot metrikalari</a>
+      <a href="{% url 'audit_log' %}" class="{% if u == 'audit_log' %}active{% endif %}"><svg class="ic"><use href="#i-audit"/></svg>Audit jurnali</a>
+      <a href="{% url 'settings_edit' %}" class="{% if u == 'settings_edit' %}active{% endif %}"><svg class="ic"><use href="#i-sliders"/></svg>Tanish parametrlari</a>
+      {% endif %}
+    </nav>
+    <div class="sb-foot">
+      <span class="avatar">{{ user.display_name|initials }}</span>
+      <span class="sb-user"><b>{{ user.display_name }}</b><small>{{ user.get_role_display }}</small></span>
+      <form method="post" action="{% url 'logout' %}">{% csrf_token %}
+        <button class="icon-btn" title="Chiqish" aria-label="Chiqish"><svg class="ic"><use href="#i-logout"/></svg></button>
+      </form>
+    </div>
+  </aside>
+  <div class="sb-backdrop" id="sb-backdrop"></div>
+
+  <div class="main">
+    <header class="topbar">
+      <button class="icon-btn menu-btn" id="menu-btn" aria-label="Menyu" aria-controls="sidebar"><svg class="ic"><use href="#i-menu"/></svg></button>
+      <div class="tb-title">{% block topbar_title %}{% endblock %}</div>
+      <span class="spacer"></span>
+      <span class="tb-clock" title="Asia/Tashkent"><svg class="ic"><use href="#i-clock"/></svg><span id="tb-clock">{% now "d.m.Y · H:i" %}</span></span>
+      <span class="tb-user">
+        <span class="avatar sm">{{ user.display_name|initials }}</span>
+        <span class="hide-sm"><b>{{ user.display_name }}</b><small>{{ user.get_role_display }}</small></span>
+      </span>
+    </header>
+    <main class="content">
+      {% if messages %}
+      <ul class="messages">{% for m in messages %}<li class="{{ m.tags }}">{{ m }}</li>{% endfor %}</ul>
+      {% endif %}
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+</div>
+{% endwith %}
+<script>
+(function () {
+  var sb = document.getElementById("sidebar"), bd = document.getElementById("sb-backdrop");
+  function toggle(open) { document.body.classList.toggle("sb-open", open); }
+  document.getElementById("menu-btn").addEventListener("click", function () { toggle(!document.body.classList.contains("sb-open")); });
+  bd.addEventListener("click", function () { toggle(false); });
+  var c = document.getElementById("tb-clock");
+  function tick() {
+    try {
+      c.textContent = new Intl.DateTimeFormat("ru-RU", { timeZone: "Asia/Tashkent", day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" }).format(new Date()).replace(",", " ·");
+    } catch (e) {}
+  }
+  tick(); setInterval(tick, 15000);
+})();
+</script>
+{% else %}
+<main class="auth-page">
+  {% block auth %}{% endblock %}
+</main>
+{% endif %}
+<script src="{% static 'js/select.js' %}"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

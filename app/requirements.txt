@@ -1,0 +1,7 @@
+Django>=5.2,<5.3
+psycopg[binary]>=3.2,<4
+cryptography>=44
+gunicorn>=23
+whitenoise>=6.7
+numpy>=1.26,<3
+opencv-python-headless>=4.10,<6

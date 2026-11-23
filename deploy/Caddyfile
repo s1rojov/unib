@@ -1,0 +1,20 @@
+{
+	# Lokal tarmoq uchun ichki CA sertifikati. Domen bo'lsa, SITE_ADDRESS ga domen
+	# yozing va Caddy Let's Encrypt sertifikatini o'zi oladi.
+	admin off
+}
+
+{$SITE_ADDRESS} {
+	tls internal
+	encode gzip
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options nosniff
+		X-Frame-Options DENY
+		Referrer-Policy same-origin
+		-Server
+	}
+	reverse_proxy web:8000
+}
+
+# HTTP so'rovlari HTTPS ga yo'naltiriladi (Caddy buni avtomatik bajaradi).

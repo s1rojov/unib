@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Kameralar nazorati{% endblock %}
+{% block topbar_title %}Nazorat / Kameralar{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><p class="crumbs"><a href="{% url 'manage_index' %}">Boshqaruv</a> / Kameralar</p><h1>Kameralar nazorati</h1>
+  <p class="muted">Jonli tasvir faqat xotiradan uzatiladi — yozib olinmaydi va saqlanmaydi. Har bir koʻrish audit jurnaliga yoziladi.</p></div>
+  <a class="btn primary" href="{% url 'kameralar_create' %}">+ Kamera</a>
+</div>
+
+{% if not preview_enabled %}<div class="banner warn">Jonli koʻrish sozlamalarda oʻchirilgan (CAMERA_PREVIEW_ENABLED=0).</div>{% endif %}
+
+<div class="legend small">
+  <span><i style="background:#28aa3c"></i>tanildi (davomatga qoʻshilgan)</span>
+  <span><i style="background:#5ac85a"></i>ishonchli moslik / sifat talabiga mos</span>
+  <span><i style="background:#ffb400"></i>noaniq nomzod</span>
+  <span><i style="background:#dc3c3c"></i>notanish yuz</span>
+  <span><i style="background:#969696"></i>sifat past yoki yuz kichik</span>
+</div>
+
+<div class="cam-grid">
+{% for c, s in tiles %}
+  <div class="card cam-tile" data-snapshot="{% url 'camera_snapshot' c.pk %}">
+    <div class="row">
+      <b>{{ c.name }}</b><span class="muted small">{{ c.room }}</span><span class="spacer"></span>
+      {% if not c.is_active %}<span class="badge">nofaol</span>{% endif %}
+      <span class="badge {% if c.status == 'online' %}ok{% elif c.status == 'offline' %}bad{% endif %}">{{ c.get_status_display }}</span>
+    </div>
+    <div class="muted small">{{ c.masked_url }}</div>
+    {% if s %}
+    <div class="small" style="margin-top:.25rem">Faol sessiya: <a href="{% url 'session_detail' s.pk %}">{{ s.school_class }}</a> · {{ s.teacher.display_name }} ·
+      <span class="badge {% if s.status == 'active' %}ok{% elif s.status == 'disconnected' %}bad{% else %}warn{% endif %}">{{ s.status_label }}</span>
+      · kamera aniqlagan <b>{{ s.n_cam }}</b>/{{ s.n_total }}</div>
+    {% else %}
+    <div class="small muted" style="margin-top:.25rem">Faol sessiya yoʻq</div>
+    {% endif %}
+
+    <div class="cam-view">
+      <img alt="{{ c.name }} — jonli tasvir" hidden>
+      <div class="cam-placeholder">Jonli koʻrish oʻchiq</div>
+    </div>
+    <div class="cam-stats small"></div>
+
+    <div class="row" style="margin-top:.5rem">
+      {% if preview_enabled %}<button type="button" class="btn primary sm js-live">▶ Kamerani koʻrsatish</button>{% endif %}
+      <a class="btn sm" href="{% url 'kameralar_edit' c.pk %}">Sozlash</a>
+      <span class="spacer"></span>
+      <form method="post" action="{% url 'camera_check' c.pk %}" class="row" style="gap:.35rem">{% csrf_token %}
+        <input type="text" name="note" placeholder="izoh: oxirgi qator…" maxlength="255" style="width:11rem">
+        <button class="btn sm" title="Bitta kadr boʻyicha yuzlar statistikasini saqlash">Tekshiruvni saqlash</button>
+      </form>
+    </div>
+  </div>
+{% empty %}
+  <div class="card"><p class="muted">Kamera qoʻshilmagan. <a href="{% url 'kameralar_create' %}">Kamera qoʻshish</a> — kompyuter kamerasi uchun manzilga <b>0</b> yozing.</p></div>
+{% endfor %}
+</div>
+
+<h2>Oʻrnatish tekshiruvlari (F-15)</h2>
+<p class="muted small">Kamera oʻquvchilarning yuzini va yelkadan yuqori qismini koʻrishi kerak. Oʻquvchilarni barcha qatorlarga oʻtqazib, jonli koʻrishda har bir yuz
+yashil boʻlishini tekshiring, soʻng «Tekshiruvni saqlash» bilan natijani qayd eting. Ishonchli tanish uchun yuz kamida {{ cfg.min_face_px }} px boʻlishi kerak.</p>
+<div id="checks" data-pending="{{ pending|yesno:'1,0' }}">
+{% for chk in checks %}
+<div class="card">
+  <div class="row"><b>{{ chk.camera }}</b><span class="muted small">{{ chk.requested_at|date:"d.m.Y H:i:s" }} · {{ chk.requested_by.display_name }}{% if chk.note %} · {{ chk.note }}{% endif %}</span>
+    <span class="spacer"></span><span class="badge {% if chk.status == 'done' %}ok{% elif chk.status == 'failed' %}bad{% else %}warn{% endif %}">{{ chk.get_status_display }}</span></div>
+  {% if chk.status == 'done' %}{% with r=chk.result %}
+  <div class="stats" style="margin-top:.75rem">
+    <div class="stat"><div class="v">{{ r.width }}×{{ r.height }}</div><div class="l">Kadr oʻlchami</div></div>
+    <div class="stat"><div class="v">{{ r.faces }}</div><div class="l">Topilgan yuzlar</div></div>
+    <div class="stat {% if r.faces_ok == r.faces %}ok{% else %}warn{% endif %}"><div class="v">{{ r.faces_ok }}</div><div class="l">Sifat talabidan oʻtganlar</div></div>
+    <div class="stat"><div class="v">{{ r.min_size|default:"—" }}</div><div class="l">Eng kichik yuz (px)</div></div>
+    <div class="stat"><div class="v">{{ r.median_size|default:"—"|floatformat:0 }}</div><div class="l">Oʻrtacha yuz (px)</div></div>
+  </div>
+  {% if r.items %}<details><summary class="small">Har bir yuz (yuqoridan pastga)</summary>
+  <table class="small"><thead><tr><th>Y</th><th>Oʻlcham</th><th>Tiniqlik</th><th>Burilish</th><th>Holat</th></tr></thead>
+  <tbody>{% for i in r.items %}<tr><td class="num">{{ i.y }}</td><td class="num">{{ i.size }} px</td><td class="num">{{ i.blur }}</td><td class="num">{{ i.yaw }}°</td>
+  <td>{% if i.ok %}<span class="badge ok">OK</span>{% else %}<span class="badge warn">past</span>{% endif %}</td></tr>{% endfor %}</tbody></table></details>{% endif %}
+  {% endwith %}{% elif chk.status == 'failed' %}<p class="small" style="color:var(--bad)">{{ chk.result.error }}</p>{% endif %}
+</div>
+{% empty %}<p class="muted">Tekshiruv oʻtkazilmagan.</p>{% endfor %}
+</div>
+{% endblock %}
+{% block scripts %}<script src="{% static 'js/cameras.js' %}"></script>{% endblock %}

@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Tanish parametrlari{% endblock %}
+{% block topbar_title %}Sozlamalar / Tanish parametrlari{% endblock %}
+{% block content %}
+<div class="page-head"><div><p class="crumbs"><a href="{% url 'manage_index' %}">Boshqaruv</a> / Parametrlar</p><h1>Tanish parametrlari</h1>
+<p class="muted">Barcha chegaralar pilotda kalibrlanadi. Oʻzgarishlar yangi sessiyalarda qoʻllanadi va audit jurnaliga yoziladi.</p></div></div>
+<form method="post">
+  {% csrf_token %}
+  {% if form.non_field_errors %}<div class="banner bad">{{ form.non_field_errors|join:" " }}</div>{% endif %}
+  {% for title, fields in form.groups %}
+  <div class="card flush"><div class="card-head"><h2>{{ title }}</h2></div><div class="card-body"><div class="form-grid">{% include "crud/_fields.html" with fields=fields %}</div></div></div>
+  {% endfor %}
+  <div class="row"><button class="btn primary">Saqlash</button><a class="btn" href="{% url 'manage_index' %}">Bekor qilish</a></div>
+</form>
+{% endblock %}

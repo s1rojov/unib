@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% load ui %}
+{% block title %}Hisobot #{{ s.pk }}{% endblock %}
+{% block topbar_title %}Sessiyalar / #{{ s.pk }} / Hisobot{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <p class="crumbs"><a href="{% url 'session_list' %}">Sessiyalar</a> / <a href="{% url 'session_detail' s.pk %}">#{{ s.pk }}</a> / hisobot</p>
+    <h1>Sessiya hisoboti — {{ s.school_class }}</h1>
+    <p class="muted">{{ s.room }} · {{ s.teacher.display_name }} · {{ s.started_at|date:"d.m.Y H:i" }}–{{ s.ended_at|date:"H:i"|default:"…" }}
+      · <span class="badge {% if s.status == 'confirmed' %}ok{% else %}warn{% endif %}">{{ s.status_label }}</span></p>
+  </div>
+  <div class="row">
+    <a class="btn" href="{% url 'session_detail' s.pk %}">Davomat oynasi</a>
+    <a class="btn primary" href="{% url 'session_report_csv' s.pk %}">CSV yuklab olish</a>
+    {% if user.is_admin and not s.is_live %}
+    <form method="post" action="{% url 'sessions_delete' %}">{% csrf_token %}
+      <input type="hidden" name="session_id" value="{{ s.pk }}"><input type="hidden" name="next" value="{{ request.get_full_path }}">
+      <button class="btn danger" title="Sessiyani butunlay oʻchirish"><svg class="ic"><use href="#i-trash"/></svg>Oʻchirish</button>
+    </form>{% endif %}
+  </div>
+</div>
+
+<h2>Davomat (F-12)</h2>
+<div class="stats">
+  <div class="stat ok"><div class="v">{{ rep.camera_detected }}</div><div class="l">Kamera aniqlaganlar</div></div>
+  <div class="stat"><div class="v">{{ rep.teacher_present }}</div><div class="l">Oʻqituvchi tasdiqlagan kelganlar</div></div>
+  <div class="stat bad"><div class="v">{{ rep.camera_rejected }}</div><div class="l">Kamera aniqlab, oʻqituvchi rad etganlar</div></div>
+  <div class="stat warn"><div class="v">{{ rep.camera_missed_present }}</div><div class="l">Kamera topmagan kelganlar</div></div>
+  <div class="stat"><div class="v">{{ rep.total }}</div><div class="l">Sinfda jami</div></div>
+</div>
+{% if s.status != 'confirmed' %}<div class="banner warn">Sessiya hali tasdiqlanmagan: «Oʻqituvchi tasdiqlagan» soni faqat qoʻlda belgilanganlarni oʻz ichiga oladi.</div>{% endif %}
+
+<h2>Texnik koʻrsatkichlar</h2>
+<div class="stats">
+  <div class="stat"><div class="v">{{ rep.latency_p95|seconds }}</div><div class="l">Kechikish, 95-persentil ({{ rep.latency_count }} ta oʻlchov)</div></div>
+  <div class="stat"><div class="v">{{ rep.analysed_seconds|seconds }}</div><div class="l">Tahlil qilingan vaqt</div></div>
+  <div class="stat"><div class="v">{{ s.frames_processed }}</div><div class="l">Ishlangan kadrlar</div></div>
+  <div class="stat"><div class="v">{{ s.unknown_faces }}</div><div class="l">Notanish yuzlar (kadr×yuz)</div></div>
+  <div class="stat"><div class="v">{{ rep.outages|length }}</div><div class="l">Oqim uzilishlari</div></div>
+</div>
+
+{% if rep.ground_truth %}
+<h2>Pilot: mustaqil yoʻqlama bilan solishtirish</h2>
+{% with g=rep.ground_truth %}
+<div class="stats">
+  <div class="stat {% if g.fp %}bad{% else %}ok{% endif %}"><div class="v">{{ g.fp }}</div><div class="l">Xato moslik (FP) · {{ g.fp_rate|pct:1 }}</div></div>
+  <div class="stat {% if g.fn %}warn{% endif %}"><div class="v">{{ g.fn }}</div><div class="l">Oʻtkazib yuborish (FN) · {{ g.fn_rate|pct:1 }}</div></div>
+  <div class="stat ok"><div class="v">{{ g.tp }}</div><div class="l">Toʻgʻri moslik (TP) · {{ g.tp_rate|pct:1 }} kelganlardan</div></div>
+  <div class="stat"><div class="v">{{ g.present }}</div><div class="l">Haqiqatda kelganlar</div></div>
+</div>
+{% endwith %}
+{% endif %}
+
+<div class="card flush">
+<div class="card-head"><h2>Oʻquvchilar</h2><span class="muted">{{ rows|length }} ta</span></div>
+<div class="table-wrap">
+<table>
+  <thead><tr><th>ID</th><th>F.I.Sh.</th><th>Yakuniy holat</th><th>Manba</th><th class="hide-sm">Kamera</th><th>Aniqlangan</th><th class="hide-sm">Ball</th>
+  {% if rep.ground_truth %}<th>Mustaqil yoʻqlama</th>{% endif %}<th>Koʻrinish qamrovi (F-14)</th></tr></thead>
+  <tbody>
+  {% for r, cov in rows %}
+    <tr>
+      <td class="num">{{ r.student.student_code }}</td>
+      <td>{{ r.student.full_name }}</td>
+      <td><span class="badge {% if r.status == 'present' %}ok{% elif r.status == 'absent' %}bad{% else %}warn{% endif %}">{{ r.get_status_display }}</span></td>
+      <td>{{ r.get_source_display }}</td>
+      <td class="hide-sm muted">{{ r.get_camera_status_display }}</td>
+      <td class="num">{{ r.camera_first_seen_at|date:"H:i:s"|default:"—" }}</td>
+      <td class="num hide-sm">{% if r.camera_score is not None %}{{ r.camera_score|floatformat:3 }}{% else %}—{% endif %}</td>
+      {% if rep.ground_truth %}<td>{{ r.get_ground_truth_display|default:"—" }}</td>{% endif %}
+      <td>{% if cov is not None %}<div class="row" style="gap:.4rem;flex-wrap:nowrap"><div class="bar" style="width:80px"><span style="width:{{ cov|pct_width }}%"></span></div><span class="num small">{{ cov|pct }}</span></div>{% else %}<span class="muted">—</span>{% endif %}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+</div>
+
+<div class="grid" style="margin-top:1rem">
+  <div class="card">
+    <h3 style="margin-top:0">Kamera hodisalari</h3>
+    {% for e in events %}<div class="small"><span class="num">{{ e.at|date:"H:i:s" }}</span> — {{ e.get_kind_display }}{% if e.attempt %} (urinish {{ e.attempt }}){% endif %}</div>
+    {% empty %}<p class="muted small">Hodisa yoʻq</p>{% endfor %}
+    {% if rep.outages %}<h3>Uzilishlar</h3>
+    {% for o in rep.outages %}<div class="small num">{{ o.from|date:"H:i:s" }} → {{ o.to|date:"H:i:s"|default:"tiklanmagan" }} ({{ o.seconds|seconds }})</div>{% endfor %}{% endif %}
+  </div>
+  <div class="card">
+    <h3 style="margin-top:0">Oʻzgarishlar jurnali</h3>
+    {% for a in audit %}<div class="small"><span class="num">{{ a.at|date:"d.m H:i:s" }}</span> · {{ a.actor.display_name|default:"tizim" }} · {{ a.action }}{% if a.field %}: {{ a.old_value }} → {{ a.new_value }}{% endif %}{% if a.after_confirmation %} <span class="badge warn">tasdiqdan keyin</span>{% endif %} <span class="muted">{{ a.note }}</span></div>
+    {% empty %}<p class="muted small">Yozuv yoʻq</p>{% endfor %}
+  </div>
+</div>
+{% endblock %}

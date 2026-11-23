@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Sessiya #{{ s.pk }}{% endblock %}
+{% block topbar_title %}Sessiyalar / #{{ s.pk }}{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <p class="crumbs"><a href="{% url 'session_list' %}">Sessiyalar</a> / #{{ s.pk }}</p>
+    <h1>{{ s.school_class }} — davomat</h1>
+    <p class="muted">{{ s.room }} · {{ s.camera.name }} · {{ s.started_at|date:"d.m.Y H:i" }} dan
+      {% if s.is_live %}· avtomatik yopilish: <span id="deadline">{{ s.deadline|date:"H:i" }}</span>{% endif %}
+      · <span id="status" class="badge info">{{ s.status_label }}</span></p>
+  </div>
+  <div class="row">
+    {% if s.is_live %}
+    <form method="post" action="{% url 'session_end' s.pk %}" onsubmit="return confirm('Sessiyani yakunlaysizmi? Tahlil toʻxtaydi, kamera natijalari boshqa oʻzgarmaydi.')">
+      {% csrf_token %}<button class="btn danger">Sessiyani yakunlash</button>
+    </form>
+    {% elif s.status == 'ended' %}
+    <form method="post" action="{% url 'session_confirm' s.pk %}" id="confirm-form">
+      {% csrf_token %}<button class="btn primary">Davomatni tasdiqlash</button>
+    </form>
+    {% endif %}
+    {% if not s.is_live %}<a class="btn" href="{% url 'session_report' s.pk %}">Hisobot</a>{% endif %}
+    {% if user.is_admin and not s.is_live %}
+    <form method="post" action="{% url 'sessions_delete' %}">{% csrf_token %}
+      <input type="hidden" name="session_id" value="{{ s.pk }}"><input type="hidden" name="next" value="{{ request.get_full_path }}">
+      <button class="btn danger" title="Sessiyani butunlay oʻchirish"><svg class="ic"><use href="#i-trash"/></svg>Oʻchirish</button>
+    </form>{% endif %}
+    <a class="btn" href="{% url 'session_observations' s.pk %}">Kuzatuv</a>
+  </div>
+</div>
+
+<div id="banner-camera" class="banner bad hidden"></div>
+<div id="banner-worker" class="banner warn hidden">Tahlil jarayoni javob bermayapti. Natijalar yangilanmasligi mumkin — qoʻlda belgilashni davom ettiring.</div>
+{% if s.status == 'ended' %}
+<div class="banner warn">Sessiya yakunlangan, tahlil toʻxtatilgan. «Tekshirish kerak» yozuvlarini koʻrib chiqing va davomatni tasdiqlang.
+Tasdiqlashda belgilanmagan kamera natijalari «Keldi», hal qilinmagan yozuvlar «Kelmadi» boʻladi.</div>
+{% elif s.status == 'confirmed' %}
+<div class="banner ok">Davomat tasdiqlangan {{ s.confirmed_at|date:"d.m.Y H:i" }}. {% if user.is_admin %}Administrator sifatida tuzatishingiz mumkin — har bir oʻzgarish audit jurnaliga yoziladi.{% else %}Oʻzgartirish uchun administratorga murojaat qiling.{% endif %}</div>
+{% endif %}
+
+<div class="stats">
+  <div class="stat ok"><span class="ic-wrap"><svg class="ic"><use href="#i-face"/></svg></span><div class="v" id="c-camera">–</div><div class="l">Kamera aniqladi (jonli hisob)</div></div>
+  <div class="stat"><span class="ic-wrap"><svg class="ic"><use href="#i-check"/></svg></span><div class="v" id="c-present">–</div><div class="l">Keldi (yakuniy)</div></div>
+  <div class="stat warn"><span class="ic-wrap"><svg class="ic"><use href="#i-alert"/></svg></span><div class="v" id="c-review">–</div><div class="l">Tekshirish kerak</div></div>
+  <div class="stat bad"><div class="v" id="c-absent">–</div><div class="l">Kelmadi</div></div>
+  <div class="stat"><span class="ic-wrap"><svg class="ic"><use href="#i-students"/></svg></span><div class="v" id="c-total">–</div><div class="l">Sinfda jami</div></div>
+</div>
+
+{% if s.is_live and preview_enabled %}
+<div class="card flush cam-tile session-cam" data-snapshot="{% url 'session_camera' s.pk %}">
+  <div class="card-head">
+    <svg class="ic"><use href="#i-camera"/></svg><h2>Kamera — jonli tasvir</h2><span class="muted">{{ s.camera.name }} · {{ s.room }}</span>
+    <span class="spacer"></span>
+    <button type="button" class="btn sm js-live">▶ Kamerani koʻrsatish</button>
+  </div>
+  <div class="session-cam-body">
+    <div class="cam-view">
+      <img alt="{{ s.camera.name }} — jonli tasvir" hidden>
+      <div class="cam-placeholder">Kamera yashirilgan</div>
+    </div>
+    <div class="session-cam-side">
+      <h3>Ramka ranglari</h3>
+      <ul class="legend-list small">
+        <li><i style="background:#28aa3c"></i><span><b>Tanildi</b> — ism yoziladi, davomatga qoʻshildi</span></li>
+        <li><i style="background:#5ac85a"></i><span><b>Ishonchli moslik</b> — tasdiqlanmoqda (bir necha kadr)</span></li>
+        <li><i style="background:#ffb400"></i><span><b>Noaniq</b> — ehtimoliy nomzod, «Tekshirish kerak»</span></li>
+        <li><i style="background:#dc3c3c"></i><span><b>Notanish</b> — sinf rasmlariga mos kelmadi</span></li>
+        <li><i style="background:#969696"></i><span><b>Sifat past</b> — yuz kichik, xira yoki burilgan</span></li>
+      </ul>
+      <div class="cam-stats small"></div>
+      <p class="muted small" style="margin-bottom:0">Tasvir yozib olinmaydi va saqlanmaydi. Kulrang yoki qizil ramkadagi oʻquvchini
+      kameraga yuzini koʻrsatishini soʻrang yoki roʻyxatda qoʻlda belgilang.</p>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<div class="card flush">
+  <div class="card-head">
+    <h2>Oʻquvchilar</h2>
+    <span class="spacer"></span>
+    <div class="filters" role="tablist" style="margin:0">
+      <button class="chip active" data-filter="all">Hammasi</button>
+      <button class="chip" data-filter="review">Tekshirish kerak</button>
+      <button class="chip" data-filter="present">Keldi</button>
+      <button class="chip" data-filter="absent">Kelmadi</button>
+    </div>
+  </div>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>ID</th><th>F.I.Sh.</th><th>Holat</th><th class="hide-sm">Manba</th><th>Aniqlangan</th><th class="hide-sm">Ball</th><th>Belgilash</th></tr></thead>
+    <tbody id="rows"><tr><td colspan="7" class="muted">Yuklanmoqda…</td></tr></tbody>
+  </table>
+  </div>
+  <div class="card-head" style="border-top:1px solid var(--border);border-bottom:0"><svg class="ic muted"><use href="#i-chart"/></svg><span class="muted small" id="worker-info"></span></div>
+</div>
+
+<div id="session-config" hidden
+  data-state-url="{% url 'session_state' s.pk %}"
+  data-displayed-url="{% url 'session_displayed' s.pk %}"
+  data-mark-url="{% url 'record_mark' 0 %}"
+  data-poll-ms="{{ poll_ms }}"
+  data-live="{{ s.is_live|yesno:'1,0' }}"></div>
+{% csrf_token %}
+{% endblock %}
+{% block scripts %}<script src="{% static 'js/live.js' %}"></script>
+{% if s.is_live and preview_enabled %}<script src="{% static 'js/cameras.js' %}"></script>{% endif %}{% endblock %}

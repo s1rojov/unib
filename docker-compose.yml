@@ -1,0 +1,84 @@
+# Yuzni tanish orqali sinf davomati — MVP
+# Konteynerlar: db (PostgreSQL), web (Django), worker (tahlil jarayoni), proxy (HTTPS).
+# web va worker bitta obrazdan, lekin alohida konteynerda ishlaydi va
+# bir-biri bilan faqat PostgreSQL orqali aloqa qiladi.
+
+x-app: &app
+  build: ./app
+  image: davomat-app:latest
+  env_file: .env
+  environment:
+    DB_HOST: db
+    DB_PORT: "5432"
+  depends_on:
+    db:
+      condition: service_healthy
+  restart: unless-stopped
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${DB_NAME:-davomat}
+      POSTGRES_USER: ${DB_USER:-davomat}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD .env da berilishi shart}
+      TZ: Asia/Tashkent
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+
+  web:
+    <<: *app
+    command: ["web"]
+    environment:
+      DB_HOST: db
+      DB_PORT: "5432"
+      WORKER_PREVIEW_HOST: worker   # jonli ko'rish: worker'ning ichki porti
+    expose:
+      - "8000"
+
+  worker:
+    <<: *app
+    command: ["worker"]
+    environment:
+      DB_HOST: db
+      DB_PORT: "5432"
+      WORKER_PREVIEW_BIND: 0.0.0.0  # faqat ichki docker tarmog'ida; tashqariga ochilmaydi
+    expose:
+      - "8765"
+    # Kadrlar faqat xotirada: worker diskka yozmaydi.
+    read_only: true
+    tmpfs:
+      - /tmp:size=16m
+
+  proxy:
+    image: caddy:2.8-alpine
+    ports:
+      - "${HTTPS_PORT:-443}:443"
+      - "${HTTP_PORT:-80}:80"
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+    environment:
+      SITE_ADDRESS: ${SITE_ADDRESS:-localhost}
+    depends_on:
+      - web
+    restart: unless-stopped
+
+  # Ixtiyoriy: kamerasiz sinov uchun lokal RTSP server.
+  # docker compose --profile demo up -d rtsp
+  # So'ng: ffmpeg -re -stream_loop -1 -i video.mp4 -c copy -f rtsp rtsp://localhost:8554/sinf
+  rtsp:
+    image: bluenviron/mediamtx:1.9.3
+    profiles: ["demo"]
+    ports:
+      - "8554:8554"
+
+volumes:
+  pgdata:
+  caddy_data:

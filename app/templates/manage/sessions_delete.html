@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Sessiyalarni oʻchirish{% endblock %}
+{% block topbar_title %}Sessiyalar / Oʻchirish{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><p class="crumbs"><a href="{{ back }}">Sessiyalar</a> / oʻchirish</p>
+  <h1>{% if sessions %}{{ sessions|length }} ta sessiyani oʻchirasizmi?{% else %}Oʻchiriladigan sessiya yoʻq{% endif %}</h1></div>
+</div>
+
+<div class="card" style="max-width:860px">
+  {% if live %}
+  <div class="banner warn">{{ live|length }} ta sessiya hali davom etmoqda va oʻchirilmaydi: avval sessiya oynasida «Sessiyani yakunlash» tugmasini bosing.</div>
+  {% endif %}
+  {% if sessions %}
+  <div class="banner bad">
+    Bu amalni ortga qaytarib boʻlmaydi. Sessiyalar bilan birga <b>{{ records }} ta davomat yozuvi</b>, koʻrinish oraliqlari,
+    kamera hodisalari va kuzatuv belgilari ham oʻchadi.
+    {% if confirmed %}<br><b>Diqqat:</b> ulardan {{ confirmed }} tasi — <b>tasdiqlangan davomat</b>.{% endif %}
+    Audit jurnali saqlanadi: oʻchirish qayd etiladi.
+  </div>
+  <div class="table-wrap" style="margin:0 -1.25rem"><table class="nowrap">
+    <thead><tr><th>#</th><th>Sinf</th><th>Xona</th><th>Oʻqituvchi</th><th>Sana</th><th>Davomat</th><th>Holat</th></tr></thead>
+    <tbody>{% for s in sessions %}
+      <tr><td class="num muted">{{ s.pk }}</td><td class="cell-main">{{ s.school_class }}</td><td>{{ s.room }}</td><td>{{ s.teacher.display_name }}</td>
+      <td class="num">{{ s.started_at|date:"d.m.Y H:i" }}</td><td class="num">{{ s.n_present }}/{{ s.n_total }}</td>
+      <td><span class="badge {% if s.status == 'confirmed' %}ok{% else %}warn{% endif %}">{{ s.status_label }}</span></td></tr>
+    {% endfor %}</tbody>
+  </table></div>
+  {% endif %}
+  <form method="post" action="{% url 'sessions_delete' %}" class="form-actions">{% csrf_token %}
+    <input type="hidden" name="confirm" value="1">
+    <input type="hidden" name="next" value="{{ back }}">
+    {% for s in sessions %}<input type="hidden" name="session_id" value="{{ s.pk }}">{% endfor %}
+    {% if sessions %}<button class="btn danger-solid" type="submit"><svg class="ic"><use href="#i-trash"/></svg>Ha, {{ sessions|length }} ta sessiyani oʻchirish</button>{% endif %}
+    <a class="btn" href="{{ back }}">Bekor qilish</a>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+{% load static ui %}
+{% block title %}Yuz rasmlari{% if st %} · {{ st.full_name }}{% endif %}{% endblock %}
+{% block topbar_title %}Oʻquvchilar bazasi / Yuz rasmlari{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><p class="crumbs">Oʻquvchilar bazasi / Yuz rasmlari</p><h1>Yuz rasmlari</h1>
+  <p class="muted">Oʻquvchini tanlang va unga {{ cfg.enroll_min_samples }}–5 ta rasm biriktiring. Kamera sinfda shu rasmlar asosida oʻquvchini taniydi.</p></div>
+  <a class="btn" href="{% url 'students' %}{% if class_id %}?class={{ class_id }}{% endif %}">← Oʻquvchilar roʻyxati</a>
+</div>
+
+{% if not classes %}
+<div class="card empty"><p>Avval sinf va oʻquvchilarni kiriting.</p><a class="btn primary" href="{% url 'sinflar_create' %}">+ Sinf qoʻshish</a></div>
+{% else %}
+<div class="photos-layout">
+  <aside class="card flush">
+    <div class="card-head">
+      <form method="get" style="flex:1">
+        <select name="class" onchange="this.form.submit()" aria-label="Sinf" style="width:100%">
+          {% for c in classes %}<option value="{{ c.pk }}" {% if c.pk == class_id %}selected{% endif %}>{{ c }}</option>{% endfor %}
+        </select>
+      </form>
+    </div>
+    <ul class="list student-list">
+    {% for r in rows %}
+      <li style="padding:0"><a class="list-link row {% if st and r.st.pk == st.pk %}active{% endif %}" href="?student={{ r.st.pk }}">
+        {% if r.st.thumb_id %}<img class="face-av {% if r.enroll == 'ready' %}ok{% else %}warn{% endif %}" src="{% url 'template_thumb' r.st.thumb_id %}" alt="" loading="lazy">
+        {% else %}<span class="l-ic {% if r.enroll == 'none' %}bad{% endif %}"><svg class="ic"><use href="#i-face"/></svg></span>{% endif %}
+        <span class="l-main"><b>{{ r.st.full_name }}</b><span>{% if r.templates %}{{ r.templates }} ta rasm{% else %}rasm yoʻq{% endif %}</span></span>
+      </a></li>
+    {% empty %}
+      <li class="empty" style="display:block">Bu sinfda oʻquvchi yoʻq.<br><a href="{% url 'oquvchilar_create' %}?school_class={{ class_id }}">Oʻquvchi qoʻshish</a></li>
+    {% endfor %}
+    </ul>
+  </aside>
+
+  <section>
+  {% if not st %}
+    <div class="card empty" style="padding:3rem 1.5rem">
+      <span class="l-ic" style="margin:0 auto .75rem;width:48px;height:48px;border-radius:12px;display:grid;place-items:center;background:var(--primary-soft);color:var(--primary)"><svg class="ic" style="width:24px;height:24px"><use href="#i-face"/></svg></span>
+      <p style="margin:0">Chap tomondagi roʻyxatdan oʻquvchini tanlang.</p>
+    </div>
+  {% else %}
+    <div class="card flush">
+      <div class="card-head">
+        {% if st_thumb %}<img class="face-av lg" src="{% url 'template_thumb' st_thumb %}" alt="{{ st.full_name }}">{% else %}<span class="avatar">{{ st.full_name|initials }}</span>{% endif %}
+        <div><h2>{{ st.full_name }}</h2><span class="muted">{{ st.school_class }} · ID {{ st.student_code }}</span></div>
+        <span class="spacer"></span>
+        {% if enroll == 'ready' %}<span class="badge ok">{{ templates|length }} ta rasm — tayyor</span>
+        {% elif enroll == 'partial' %}<span class="badge warn">{{ templates|length }} ta rasm — kamida {{ cfg.enroll_min_samples }} ta kerak</span>
+        {% else %}<span class="badge bad">rasm yoʻq</span>{% endif %}
+        <a class="btn sm" href="{% url 'oquvchilar_edit' st.pk %}">Tahrirlash</a>
+      </div>
+      {% if templates %}
+      <form method="post" action="{% url 'templates_delete' st.pk %}" class="gallery-wrap" onsubmit="return confirm('Tanlangan rasmlarni oʻchirasizmi?')">{% csrf_token %}
+        <div class="row" style="margin-bottom:.75rem">
+          <h3 style="margin:0">Biriktirilgan rasmlar</h3><span class="muted small">{{ templates|length }} ta · yangilari birinchi</span>
+          <span class="spacer"></span>
+          <button class="btn sm danger">Tanlanganlarni oʻchirish</button>
+        </div>
+        <div class="gallery">
+        {% for t in templates %}
+          <label class="g-item {% if t.pk in new_ids %}is-new{% endif %}">
+            {% if t.has_thumb %}<img src="{% url 'template_thumb' t.pk %}" alt="{{ st.full_name }} — rasm {{ forloop.counter }}" loading="lazy">
+            {% else %}<span class="g-none">rasm<br>saqlanmagan</span>{% endif %}
+            <input type="checkbox" name="template_id" value="{{ t.pk }}" aria-label="Tanlash">
+            {% if t.pk in new_ids %}<span class="badge ok g-new">yangi</span>{% endif %}
+            <span class="g-meta"><b>sifat {{ t.quality_score|floatformat:2 }}</b><span>{{ t.face_size_px }} px · {{ t.created_at|date:"d.m H:i" }}</span></span>
+          </label>
+        {% endfor %}
+        </div>
+      </form>
+      {% endif %}
+      <div class="card-body">
+        <p class="muted small" style="margin-top:0">Talablar: rasmda faqat <b>bitta yuz</b>; yuz kamida {{ cfg.enroll_min_face_px }} px; tiniq (≥ {{ cfg.enroll_min_blur_var|floatformat:0 }});
+        bosh burilishi ≤ {{ cfg.enroll_max_yaw_deg|floatformat:0 }}°. Turli burchakdan, yaxshi yorugʻlikda {{ cfg.enroll_min_samples }}–5 ta rasm.
+        Toʻliq rasm saqlanmaydi — bazaga shifrlangan yuz andozasi va yuzning kichik (160×160) kesimi yoziladi.</p>
+
+        <div class="upload-grid">
+          <div class="upload-box">
+            <h3>Fayldan yuklash</h3>
+            <form method="post" action="{% url 'photos' %}?student={{ st.pk }}" enctype="multipart/form-data" id="samples-form">{% csrf_token %}
+              <input type="hidden" name="action" value="samples">
+              {{ upload_form.images }}
+              {{ upload_form.images.errors }}
+              <div style="margin-top:.75rem"><button class="btn primary">Rasmlarni biriktirish</button></div>
+            </form>
+          </div>
+          <div class="upload-box">
+            <h3>Kameradan suratga olish</h3>
+            <p class="muted small" style="margin-top:0">Oʻquvchi kameraga qarab tursin; har suratda boshini biroz burib (chapga, oʻngga, toʻgʻriga) 3–5 ta surat oling.
+            Shu kamerada faol sessiya boʻlmasin.</p>
+            <video id="cam-video" autoplay playsinline muted hidden style="width:100%;border-radius:8px;background:#000"></video>
+            <div class="row" style="margin-top:.5rem">
+              <button type="button" class="btn" id="cam-start"><svg class="ic"><use href="#i-camera"/></svg>Kamerani yoqish</button>
+              <button type="button" class="btn primary" id="cam-shot" hidden>Suratga olish</button>
+              <button type="button" class="btn primary" id="cam-send" hidden>Biriktirish</button>
+              <button type="button" class="btn" id="cam-reset" hidden>Tozalash</button>
+            </div>
+            <p class="muted small" id="cam-msg"></p>
+            <div class="row" id="cam-thumbs" style="gap:.4rem"></div>
+          </div>
+        </div>
+
+        {% if results %}
+        <h3>Natija</h3>
+        <div class="result-list">
+        {% for r in results %}<div class="row small" style="flex-wrap:nowrap">
+          {% if r.template and r.template.has_thumb %}<img class="face-av" src="{% url 'template_thumb' r.template.pk %}" alt="">{% else %}<span class="l-ic {% if not r.ok %}bad{% endif %}" style="width:36px;height:36px;border-radius:8px;display:grid;place-items:center;flex:none"><svg class="ic"><use href="#i-{% if r.ok %}check{% else %}alert{% endif %}"/></svg></span>{% endif %}
+          <span>{% if r.ok %}<span class="badge ok">qabul qilindi</span>{% else %}<span class="badge bad">rad etildi</span>{% endif %} <b>{{ r.name }}</b> — {{ r.message }}{% if r.quality %} (sifat {{ r.quality|floatformat:2 }}){% endif %}</span>
+        </div>{% endfor %}
+        </div>
+        {% endif %}
+      </div>
+      {% if next_st %}
+      <div class="form-actions" style="margin:0">
+        <span class="muted small">Keyingi rasmi tayyor boʻlmagan oʻquvchi:</span>
+        <a class="btn primary" href="?student={{ next_st.pk }}">{{ next_st.full_name }} →</a>
+      </div>
+      {% endif %}
+    </div>
+
+  {% endif %}
+  </section>
+</div>
+{% endif %}
+{% endblock %}
+{% block scripts %}<script src="{% static 'js/enroll.js' %}"></script>{% endblock %}

@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{% block title %}Sessiyalar{% endblock %}
+{% block topbar_title %}Sessiyalar / {% if status == 'live' %}Faol sessiyalar{% else %}Barcha sessiyalar{% endif %}{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><p class="crumbs">Sessiyalar</p><h1>{% if status == 'live' %}Faol sessiyalar{% else %}Barcha sessiyalar{% endif %}</h1>
+  <p class="muted">Darslar, davomat natijalari va hisobotlar. Keraksiz yoki sinov sessiyalarini shu yerdan oʻchirishingiz mumkin.</p></div>
+</div>
+
+<div class="stats">
+  <a class="stat stat-link {% if status == '' %}is-current{% endif %}" href="?{{ qs_status }}"><span class="ic-wrap"><svg class="ic"><use href="#i-sessions"/></svg></span><div class="v">{{ stats.total }}</div><div class="l">Jami sessiyalar</div></a>
+  <a class="stat stat-link ok {% if status == 'live' %}is-current{% endif %}" href="?{{ qs_status }}{% if qs_status %}&{% endif %}status=live"><span class="ic-wrap"><svg class="ic"><use href="#i-play"/></svg></span><div class="v">{{ stats.live }}</div><div class="l">Davom etayotgan</div></a>
+  <a class="stat stat-link {% if stats.ended %}warn{% endif %} {% if status == 'ended' %}is-current{% endif %}" href="?{{ qs_status }}{% if qs_status %}&{% endif %}status=ended"><span class="ic-wrap"><svg class="ic"><use href="#i-alert"/></svg></span><div class="v">{{ stats.ended }}</div><div class="l">Tasdiqlash kutilmoqda</div></a>
+  <a class="stat stat-link {% if status == 'confirmed' %}is-current{% endif %}" href="?{{ qs_status }}{% if qs_status %}&{% endif %}status=confirmed"><span class="ic-wrap"><svg class="ic"><use href="#i-check"/></svg></span><div class="v">{{ stats.confirmed }}</div><div class="l">Tasdiqlangan</div></a>
+</div>
+
+<div class="card flush">
+  <div class="card-head">
+    <div class="filters" style="margin:0">
+      {% for v, l in filters %}<a class="chip {% if v == status %}active{% endif %}" href="?{{ qs_status }}{% if v %}{% if qs_status %}&{% endif %}status={{ v }}{% endif %}">{{ l }}</a>{% endfor %}
+    </div>
+    <span class="spacer"></span>
+    <form method="get" class="row filter-form">
+      {% if status %}<input type="hidden" name="status" value="{{ status }}">{% endif %}
+      <select name="class" aria-label="Sinf" onchange="this.form.submit()">
+        <option value="">Barcha sinflar</option>
+        {% for c in classes %}<option value="{{ c.pk }}" {% if f.class == c.pk|stringformat:'d' %}selected{% endif %}>{{ c }}</option>{% endfor %}
+      </select>
+      <select name="teacher" aria-label="Oʻqituvchi" onchange="this.form.submit()">
+        <option value="">Barcha oʻqituvchilar</option>
+        {% for t in teachers %}<option value="{{ t.pk }}" {% if f.teacher == t.pk|stringformat:'d' %}selected{% endif %}>{{ t.display_name }}</option>{% endfor %}
+      </select>
+      <input type="date" name="from" value="{{ f.from }}" aria-label="Sanadan" title="Sanadan" onchange="this.form.submit()">
+      <span class="muted">—</span>
+      <input type="date" name="to" value="{{ f.to }}" aria-label="Sanagacha" title="Sanagacha" onchange="this.form.submit()">
+      {% if has_filters %}<a class="btn sm" href="?{% if status %}status={{ status }}{% endif %}">Tozalash</a>{% endif %}
+    </form>
+  </div>
+
+  <form method="post" action="{% url 'sessions_delete' %}" id="bulk-form">{% csrf_token %}
+    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+    <div class="bulk-bar" id="bulk-bar" hidden>
+      <span><b id="bulk-count">0</b> ta sessiya tanlandi</span>
+      <span class="spacer"></span>
+      <button type="button" class="btn sm" id="bulk-clear">Bekor qilish</button>
+      <button class="btn sm danger-solid">Tanlanganlarni oʻchirish</button>
+    </div>
+    <div class="table-wrap">
+    <table class="nowrap">
+      <thead><tr>
+        <th style="width:36px"><input type="checkbox" id="check-all" aria-label="Hammasini tanlash"></th>
+        <th>#</th><th>Sinf · xona · oʻqituvchi</th><th>Sana</th><th>Davomat</th><th>Holat</th>
+        <th style="text-align:right">Amallar</th>
+      </tr></thead>
+      <tbody>
+      {% for s in page %}
+        <tr class="{% if s.is_live %}is-live{% endif %}">
+          <td>{% if s.is_live %}<input type="checkbox" disabled title="Davom etayotgan sessiyani oʻchirib boʻlmaydi — avval yakunlang" aria-label="Tanlab boʻlmaydi">
+              {% else %}<input type="checkbox" class="row-check" name="session_id" value="{{ s.pk }}" aria-label="Sessiya #{{ s.pk }} ni tanlash">{% endif %}</td>
+          <td class="num muted">{{ s.pk }}</td>
+          <td><a class="cell-main" href="{% url 'session_detail' s.pk %}" style="color:inherit">{{ s.school_class }}</a>
+            <span class="cell-sub">{{ s.room }} · {{ s.teacher.display_name }}</span></td>
+          <td class="num">{{ s.started_at|date:"d.m.Y" }} <span class="muted">{{ s.started_at|date:"H:i" }}{% if s.ended_at %}–{{ s.ended_at|date:"H:i" }}{% endif %}</span></td>
+          <td>{% if s.n_total %}<div class="row" style="gap:.45rem;flex-wrap:nowrap"><div class="bar" style="width:70px"><span style="width:{% widthratio s.n_present s.n_total 100 %}%"></span></div><span class="num small">{{ s.n_present }}/{{ s.n_total }}</span></div>{% else %}<span class="muted">—</span>{% endif %}</td>
+          <td><span class="badge {% if s.status == 'confirmed' %}ok{% elif s.status == 'ended' %}warn{% elif s.status == 'disconnected' %}bad{% else %}info{% endif %}">{{ s.status_label }}</span></td>
+          <td style="text-align:right">
+            <a class="btn sm" href="{% url 'session_detail' s.pk %}">Ochish</a>
+            {% if not s.is_live %}<a class="btn sm" href="{% url 'session_report' s.pk %}">Hisobot</a>
+            <button class="btn sm danger icon-only" form="del-one" name="session_id" value="{{ s.pk }}" title="Oʻchirish" aria-label="Sessiya #{{ s.pk }} ni oʻchirish"><svg class="ic"><use href="#i-trash"/></svg></button>{% endif %}
+          </td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="7" class="empty">{% if has_filters or status %}Bu filtr boʻyicha sessiya topilmadi{% else %}Hali sessiya oʻtkazilmagan{% endif %}</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    </div>
+  </form>
+  <form method="post" action="{% url 'sessions_delete' %}" id="del-one">{% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}"></form>
+
+  <div class="card-head" style="border-top:1px solid var(--border);border-bottom:0">
+    <span class="muted small">{{ page.paginator.count }} ta sessiya{% if page.paginator.num_pages > 1 %} · {{ page.number }} / {{ page.paginator.num_pages }} sahifa{% endif %}</span>
+    <span class="spacer"></span>
+    {% if page.has_previous %}<a class="btn sm" href="?{{ qs_keep }}{% if qs_keep %}&{% endif %}page={{ page.previous_page_number }}">← Oldingi</a>{% endif %}
+    {% if page.has_next %}<a class="btn sm" href="?{{ qs_keep }}{% if qs_keep %}&{% endif %}page={{ page.next_page_number }}">Keyingi →</a>{% endif %}
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+(function () {
+  const all = document.getElementById("check-all");
+  const boxes = Array.from(document.querySelectorAll(".row-check"));
+  const bar = document.getElementById("bulk-bar"), count = document.getElementById("bulk-count");
+  function update() {
+    const n = boxes.filter((b) => b.checked).length;
+    count.textContent = n;
+    bar.hidden = n === 0;
+    all.checked = n > 0 && n === boxes.length;
+    all.indeterminate = n > 0 && n < boxes.length;
+    boxes.forEach((b) => b.closest("tr").classList.toggle("is-selected", b.checked));
+  }
+  all.disabled = boxes.length === 0;
+  all.addEventListener("change", () => { boxes.forEach((b) => (b.checked = all.checked)); update(); });
+  boxes.forEach((b) => b.addEventListener("change", update));
+  document.getElementById("bulk-clear").addEventListener("click", () => { boxes.forEach((b) => (b.checked = false)); update(); });
+  update();
+})();
+</script>
+{% endblock %}

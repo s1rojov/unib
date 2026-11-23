@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Boshqaruv{% endblock %}
+{% block topbar_title %}Boshqaruv{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Boshqaruv</h1><p class="muted">Maʼlumotnomalar, sozlamalar va nazorat</p></div></div>
+
+<div class="stats">
+  <div class="stat"><span class="ic-wrap"><svg class="ic"><use href="#i-students"/></svg></span><div class="v">{{ c.oquvchilar }}</div><div class="l">Faol oʻquvchilar</div></div>
+  <div class="stat"><span class="ic-wrap"><svg class="ic"><use href="#i-class"/></svg></span><div class="v">{{ c.sinflar }}</div><div class="l">Sinflar</div></div>
+  <div class="stat ok"><span class="ic-wrap"><svg class="ic"><use href="#i-face"/></svg></span><div class="v">{{ c.andozali }}</div><div class="l">Yuz rasmi bor</div></div>
+  <div class="stat"><span class="ic-wrap"><svg class="ic"><use href="#i-sessions"/></svg></span><div class="v">{{ c.sessiyalar }}</div><div class="l">Jami sessiyalar</div></div>
+</div>
+
+<h2>Maʼlumotnomalar</h2>
+<div class="tiles">
+  <a class="tile" href="{% url 'xonalar_list' %}"><span class="t-ic"><svg class="ic"><use href="#i-room"/></svg></span><b>Xonalar</b><span class="v">{{ c.xonalar }}</span><span class="muted small">Dars xonalari</span></a>
+  <a class="tile" href="{% url 'cameras' %}"><span class="t-ic"><svg class="ic"><use href="#i-camera"/></svg></span><b>Kameralar</b><span class="v">{{ c.kameralar }}</span><span class="muted small">Nazorat, jonli koʻrish, tekshiruv</span></a>
+  <a class="tile" href="{% url 'sinflar_list' %}"><span class="t-ic"><svg class="ic"><use href="#i-class"/></svg></span><b>Sinflar</b><span class="v">{{ c.sinflar }}</span><span class="muted small">Sinf va oʻquv yili</span></a>
+  <a class="tile" href="{% url 'students' %}"><span class="t-ic"><svg class="ic"><use href="#i-students"/></svg></span><b>Oʻquvchilar</b><span class="v">{{ c.oquvchilar }}</span><span class="muted small">{{ c.andozali }} tasining yuz rasmi bor</span></a>
+  <a class="tile" href="{% url 'photos' %}"><span class="t-ic"><svg class="ic"><use href="#i-face"/></svg></span><b>Yuz rasmlari</b><span class="v">{{ c.andozali }}</span><span class="muted small">Oʻquvchiga rasm biriktirish</span></a>
+  <a class="tile" href="{% url 'foydalanuvchilar_list' %}"><span class="t-ic"><svg class="ic"><use href="#i-users"/></svg></span><b>Foydalanuvchilar</b><span class="v">{{ c.foydalanuvchilar }}</span><span class="muted small">Administratorlar va oʻqituvchilar</span></a>
+  <a class="tile" href="{% url 'biriktiruvlar_list' %}"><span class="t-ic"><svg class="ic"><use href="#i-link"/></svg></span><b>Biriktiruvlar</b><span class="v">{{ c.biriktiruvlar }}</span><span class="muted small">Oʻqituvchi → sinf → xona</span></a>
+</div>
+
+<h2>Sozlamalar va hisobotlar</h2>
+<div class="tiles">
+  <a class="tile" href="{% url 'settings_edit' %}"><span class="t-ic"><svg class="ic"><use href="#i-sliders"/></svg></span><b>Tanish parametrlari</b><span class="muted small">T, Δ, N, yuz sifati, andoza talablari</span></a>
+  <a class="tile" href="{% url 'pilot' %}"><span class="t-ic"><svg class="ic"><use href="#i-chart"/></svg></span><b>Pilot metrikalari</b><span class="muted small">FP, FN, TP, kechikish, qamrov</span></a>
+  <a class="tile" href="{% url 'audit_log' %}"><span class="t-ic"><svg class="ic"><use href="#i-audit"/></svg></span><b>Audit jurnali</b><span class="v">{{ c.audit }}</span><span class="muted small">Kim, qachon, nimani oʻzgartirdi</span></a>
+  <a class="tile" href="{% url 'manage_sessions' %}"><span class="t-ic"><svg class="ic"><use href="#i-sessions"/></svg></span><b>Sessiyalar</b><span class="v">{{ c.sessiyalar }}</span><span class="muted small">Barcha darslar va hisobotlar</span></a>
+</div>
+{% endblock %}

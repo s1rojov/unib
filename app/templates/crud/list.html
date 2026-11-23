@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}{{ r.title }}{% endblock %}
+{% block topbar_title %}{{ r.section }} / {{ r.title }}{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><p class="crumbs">{{ r.section }} / {{ r.title }}</p><h1>{{ r.title }}</h1></div>
+  <a class="btn primary" href="{% url r.key|add:'_create' %}">+ Qoʻshish</a>
+</div>
+<div class="card flush">
+  <div class="card-head">
+    <form method="get" class="row" style="gap:.4rem;flex:1">
+      <input type="text" name="q" value="{{ q }}" placeholder="Qidirish…" aria-label="Qidirish" style="flex:1;max-width:320px">
+      <button class="btn">Qidirish</button>{% if q %}<a class="btn" href="?">Tozalash</a>{% endif %}
+    </form>
+    <span class="muted">{{ page.paginator.count }} ta yozuv</span>
+  </div>
+  <div class="table-wrap">
+  <table>
+    <thead><tr>{% for h in headers %}<th>{{ h }}</th>{% endfor %}<th style="text-align:right">Amallar</th></tr></thead>
+    <tbody>
+    {% for obj, values in rows %}
+      <tr>{% for v in values %}<td{% if forloop.first %} class="cell-main"{% endif %}>{{ v }}</td>{% endfor %}
+        <td style="text-align:right;white-space:nowrap">
+          <a class="btn sm" href="{% url r.key|add:'_edit' obj.pk %}">Tahrirlash</a>
+          <a class="btn sm danger" href="{% url r.key|add:'_delete' obj.pk %}">Oʻchirish</a>
+        </td></tr>
+    {% empty %}
+      <tr><td colspan="{{ headers|length|add:1 }}" class="empty">Yozuv yoʻq{% if q %} — «{{ q }}» boʻyicha topilmadi{% endif %}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  {% if page.paginator.num_pages > 1 %}
+  <div class="card-head" style="border-top:1px solid var(--border);border-bottom:0">
+    <span class="muted small">{{ page.number }} / {{ page.paginator.num_pages }} sahifa</span><span class="spacer"></span>
+    {% if page.has_previous %}<a class="btn sm" href="?page={{ page.previous_page_number }}&q={{ q|urlencode }}">← Oldingi</a>{% endif %}
+    {% if page.has_next %}<a class="btn sm" href="?page={{ page.next_page_number }}&q={{ q|urlencode }}">Keyingi →</a>{% endif %}
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,25 @@
+{% if not bare %}<div class="card flush">{% endif %}
+<div class="table-wrap">
+<table class="nowrap">
+  <thead><tr><th>#</th><th>Sinf</th><th class="hide-sm">Xona</th><th class="hide-sm">Oʻqituvchi</th><th>Boshlanish</th><th>Holat</th><th style="text-align:right">Amallar</th></tr></thead>
+  <tbody>
+  {% for s in sessions %}
+    <tr>
+      <td class="num muted">{{ s.pk }}</td>
+      <td><a class="cell-main" href="{% url 'session_detail' s.pk %}" style="color:inherit">{{ s.school_class }}</a></td>
+      <td class="hide-sm">{{ s.room }}</td>
+      <td class="hide-sm">{{ s.teacher.display_name }}</td>
+      <td class="num">{{ s.started_at|date:"d.m.Y" }} <span class="muted">{{ s.started_at|date:"H:i" }}</span></td>
+      <td><span class="badge {% if s.status == 'confirmed' %}ok{% elif s.status == 'ended' %}warn{% elif s.status == 'disconnected' %}bad{% else %}info{% endif %}">{{ s.status_label }}</span></td>
+      <td style="text-align:right;white-space:nowrap">
+        <a class="btn sm" href="{% url 'session_detail' s.pk %}">Ochish</a>
+        {% if not s.is_live %}<a class="btn sm" href="{% url 'session_report' s.pk %}">Hisobot</a>{% endif %}
+      </td>
+    </tr>
+  {% empty %}
+    <tr><td colspan="7" class="empty">Sessiyalar yoʻq</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% if not bare %}</div>{% endif %}

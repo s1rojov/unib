@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block title %}Bosh sahifa{% endblock %}
+{% block topbar_title %}Bosh sahifa{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><h1>Assalomu alaykum, {{ user.display_name }}</h1>
+  <p class="muted">{% now "d.m.Y" %} · bugungi darslar va tizim holati</p></div>
+  <div class="row">
+    <a class="btn" href="{% url 'session_list' %}"><svg class="ic"><use href="#i-sessions"/></svg>Barcha sessiyalar</a>
+    {% if user.is_admin %}<a class="btn primary" href="{% url 'cameras' %}"><svg class="ic"><use href="#i-camera"/></svg>Kameralar nazorati</a>{% endif %}
+  </div>
+</div>
+
+<div class="stats">
+  <div class="stat"><span class="ic-wrap"><svg class="ic"><use href="#i-sessions"/></svg></span>
+    <div class="v">{{ today_count }}</div><div class="l">Bugungi sessiyalar</div></div>
+  <div class="stat ok"><span class="ic-wrap"><svg class="ic"><use href="#i-check"/></svg></span>
+    <div class="v">{{ today_present }}<span class="muted small" style="font-weight:500"> / {{ today_total }}</span></div><div class="l">Bugun kelganlar</div></div>
+  <div class="stat"><span class="ic-wrap"><svg class="ic"><use href="#i-play"/></svg></span>
+    <div class="v">{{ live_sessions|length }}</div><div class="l">Faol sessiyalar</div></div>
+  <div class="stat {% if pending_confirm %}warn{% endif %}"><span class="ic-wrap"><svg class="ic"><use href="#i-alert"/></svg></span>
+    <div class="v">{{ pending_confirm }}</div><div class="l">Tasdiqlash kutilmoqda</div></div>
+  {% if user.is_admin %}
+  <div class="stat"><span class="ic-wrap"><svg class="ic"><use href="#i-students"/></svg></span>
+    <div class="v">{{ student_count }}</div><div class="l">Faol oʻquvchilar</div></div>
+  {% endif %}
+</div>
+
+<div class="cols-2 even">
+  <div>
+    {% if user.is_teacher %}
+    <div class="card flush">
+      <div class="card-head"><h2>Yangi sessiya</h2></div>
+      <div class="card-body">
+      {% if start_form.fields.assignment.queryset %}
+      <form method="post" action="{% url 'session_start' %}">
+        {% csrf_token %}
+        <div class="row">{{ start_form.assignment }}
+        <button class="btn primary" type="submit"><svg class="ic"><use href="#i-play"/></svg>Sessiyani boshlash</button></div>
+        <label class="small row" style="gap:.4rem;font-weight:500;margin-top:.75rem" title="{{ start_form.pilot_blind.help_text }}">{{ start_form.pilot_blind }} {{ start_form.pilot_blind.label }}</label>
+      </form>
+      <p class="muted small" style="margin:.75rem 0 0">Sessiya boshlangach tizim xona kamerasiga avtomatik ulanadi.</p>
+      {% else %}
+      <p class="muted" style="margin:0">Sizga hali sinf va xona biriktirilmagan. Administratorga murojaat qiling.</p>
+      {% endif %}
+      </div>
+    </div>
+    {% else %}
+    {% include "_live_sessions_card.html" %}
+    {% endif %}
+  </div>
+  <div>
+    {% if user.is_teacher %}
+    {% include "_live_sessions_card.html" %}
+    {% else %}
+    <div class="card flush">
+      <div class="card-head"><h2>Kameralar</h2><span class="spacer"></span><a class="btn sm" href="{% url 'kameralar_create' %}">+ Qoʻshish</a></div>
+      <ul class="list">
+      {% for c in cameras %}
+        <li>
+          <span class="l-ic {% if c.status == 'online' %}ok{% elif c.status == 'offline' %}bad{% endif %}"><svg class="ic"><use href="#i-camera"/></svg></span>
+          <span class="l-main"><b>{{ c.name }}</b><span>{{ c.room }} · {{ c.masked_url }}</span></span>
+          <span class="badge {% if c.status == 'online' %}ok{% elif c.status == 'offline' %}bad{% endif %}">{{ c.get_status_display }}</span>
+        </li>
+      {% empty %}
+        <li class="empty" style="display:block">Kamera qoʻshilmagan. <a href="{% url 'kameralar_create' %}">Qoʻshish</a></li>
+      {% endfor %}
+      </ul>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<div class="card flush">
+  <div class="card-head"><h2>Soʻnggi sessiyalar</h2><span class="spacer"></span><a class="btn sm" href="{% url 'session_list' %}">Hammasi →</a></div>
+  {% include "sessions/_table.html" with bare=1 %}
+</div>
+{% endblock %}

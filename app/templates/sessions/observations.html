@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% load ui %}
+{% block title %}Kuzatuv #{{ s.pk }}{% endblock %}
+{% block topbar_title %}Sessiyalar / #{{ s.pk }} / Kuzatuv{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><p class="crumbs"><a href="{% url 'session_list' %}">Sessiyalar</a> / <a href="{% url 'session_detail' s.pk %}">#{{ s.pk }}</a> / kuzatuv</p><h1>Kuzatuvchi belgilari — {{ s.school_class }}</h1>
+  <p class="muted">Sessiya #{{ s.pk }} · {{ s.started_at|date:"d.m.Y H:i" }} · F-17: 2-bosqich modelini tekshirish uchun haqiqiy maʼlumot</p></div>
+  <a class="btn" href="{% url 'session_detail' s.pk %}">Davomat oynasi</a>
+</div>
+<div class="card">
+  <ol class="small">
+    <li>Shablonni yuklab oling: <a href="?template=1">kuzatuv_shablon_{{ s.pk }}.csv</a></li>
+    <li>Dars davomida kuzatuvchi har bir hodisa uchun vaqt (SS:DD:ss), oʻquvchi ID va hodisa kodini yozadi.</li>
+    <li>Toʻldirilgan faylni shu yerga yuklang — tizim har bir belgini oʻquvchining koʻrinish oraliqlari bilan solishtiradi.</li>
+  </ol>
+  <form method="post" enctype="multipart/form-data" class="row">
+    {% csrf_token %}{{ form.file }}<button class="btn primary">Yuklash</button>
+  </form>
+</div>
+{% if rows %}
+<p>Kuzatuvchi belgilagan paytda tizim oʻquvchini tanigan holatlar: <b>{{ seen_ratio|pct }}</b> ({{ rows|length }} ta belgi)</p>
+<div class="card table-wrap" style="padding:0"><table>
+  <thead><tr><th>Vaqt</th><th>Oʻquvchi</th><th>Hodisa</th><th>Izoh</th><th>Tizim koʻrganmi</th></tr></thead>
+  <tbody>{% for a, seen in rows %}
+  <tr><td class="num">{{ a.at|date:"H:i:s" }}</td><td>{{ a.student.full_name }}</td><td>{{ a.get_event_display }}</td><td class="muted">{{ a.note }}</td>
+  <td>{% if seen %}<span class="badge ok">Ha</span>{% else %}<span class="badge warn">Yoʻq</span>{% endif %}</td></tr>
+  {% endfor %}</tbody>
+</table></div>
+{% else %}<p class="muted">Hali belgilar yuklanmagan.</p>{% endif %}
+{% endblock %}

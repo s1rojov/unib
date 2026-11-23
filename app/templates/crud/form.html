@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}{% if obj %}Tahrirlash{% else %}Yangi {{ r.title_one }}{% endif %}{% endblock %}
+{% block topbar_title %}{{ r.section }} / {{ r.title }}{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><p class="crumbs">{{ r.section }} / <a href="{{ r.list_url }}">{{ r.title }}</a> / {% if obj %}tahrirlash{% else %}yangi{% endif %}</p>
+  <h1>{% if obj %}{{ obj }}{% else %}Yangi {{ r.title_one }}{% endif %}</h1></div>
+</div>
+<form method="post" class="card" autocomplete="off" style="max-width:960px">
+  {% csrf_token %}
+  {% if form.non_field_errors %}<div class="banner bad">{{ form.non_field_errors|join:" " }}</div>{% endif %}
+  {% if r.key == 'oquvchilar' and not form.fields.school_class.queryset.exists %}
+  <div class="banner warn">Hali birorta sinf yoʻq. Avval <a href="{% url 'sinflar_create' %}">sinf qoʻshing</a>, soʻng oʻquvchini unga biriktiring.</div>
+  {% endif %}
+  {% if obj and r.key == 'kameralar' %}<p class="muted small" style="margin-top:0">Joriy manzil: <b>{{ obj.masked_url }}</b></p>{% endif %}
+  <div class="form-grid">{% include "crud/_fields.html" with fields=form %}</div>
+  <div class="form-actions">
+    <button class="btn primary" type="submit">Saqlash</button>
+    {% if r.can_add_another and not obj %}<button class="btn" type="submit" name="save_add" value="1">Saqlash va yana qoʻshish</button>{% endif %}
+    <a class="btn" href="{{ r.list_url }}">Bekor qilish</a>
+    {% if obj %}<span class="spacer"></span><a class="btn danger" href="{% url r.key|add:'_delete' obj.pk %}">Oʻchirish</a>{% endif %}
+  </div>
+</form>
+{% endblock %}

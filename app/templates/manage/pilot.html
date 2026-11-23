@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% load ui %}
+{% block title %}Pilot metrikalari{% endblock %}
+{% block topbar_title %}Tahlil / Pilot metrikalari{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><h1>Pilot metrikalari</h1>
+  <p class="muted">TZ 6-boʻlim. FP/FN/TP faqat «mustaqil yoʻqlama» bilan oʻtkazilgan sessiyalar boʻyicha hisoblanadi ({{ m.sessions }} ta sessiya, jami yakunlangan: {{ session_count }}).</p></div>
+  <form method="get"><select name="class" onchange="this.form.submit()"><option value="">Barcha sinflar</option>
+    {% for c in classes %}<option value="{{ c.pk }}" {% if c.pk == class_id %}selected{% endif %}>{{ c }}</option>{% endfor %}</select></form>
+</div>
+<div class="card flush"><div class="card-head"><h2>Aniqlik va ishonchlilik</h2><span class="muted">{{ m.sessions }} ta sessiya boʻyicha</span></div><div class="table-wrap"><table>
+  <thead><tr><th>Metrika</th><th>Taʼrif</th><th>Natija</th><th>Tavsiya etilgan chegara</th></tr></thead>
+  <tbody>
+    <tr><td><b>Xato moslik (FP)</b></td><td>Kamera «keldi» dedi, lekin oʻquvchi yoʻq yoki boshqa odam</td>
+      <td class="num">{{ m.fp }} · {{ m.fp_rate|pct:2 }} <span class="muted small">(FP boʻlgan sessiyalar: {{ m.sessions_with_fp }})</span></td><td>Sessiyada 0; pilot boʻyicha ≤ 0,5%</td></tr>
+    <tr><td><b>Oʻtkazib yuborish (FN)</b></td><td>Oʻquvchi bor, kamera topmadi</td><td class="num">{{ m.fn }} · {{ m.fn_rate|pct:1 }}</td><td>≤ 10%</td></tr>
+    <tr><td><b>Toʻgʻri moslik (TP)</b></td><td>Kamera toʻgʻri aniqladi</td><td class="num">{{ m.tp }} · {{ m.tp_rate|pct:1 }}</td><td>≥ 90% kelganlardan</td></tr>
+    <tr><td><b>Kechikish</b></td><td>Kadr vaqti → ekranda paydo boʻlish (95-persentil)</td><td class="num">{{ m.latency_p95|seconds }} <span class="muted small">({{ m.latency_count }} ta oʻlchov)</span></td><td>≤ 5 s</td></tr>
+    <tr><td><b>Uzilishdan tiklanish</b></td><td>Uzilish → qayta ulanish (eng uzun)</td><td class="num">{{ m.recovery_max|seconds }} <span class="muted small">({{ m.recovery_count }} ta uzilish)</span></td><td>≤ 30 s</td></tr>
+    <tr><td><b>Kuzatish qamrovi (F-14)</b></td><td>Oʻquvchi dars vaqtining necha foizida tanilgani (oʻrtacha)</td><td class="num">{{ m.coverage_avg|pct }}</td><td>Pilotdan oldin kelishiladi</td></tr>
+  </tbody>
+</table></div></div>
+<p class="muted small">Haqiqatda kelganlar: {{ m.present }} · kamera aniqlaganlar: {{ m.camera_detected }} · yoʻqlamadagi oʻquvchilar: {{ m.students }}.
+Oʻlchash usuli: oʻqituvchi kamera natijasini koʻrmasdan oldin mustaqil yoʻqlama qiladi (sessiya boshlashda «Pilot: avval mustaqil yoʻqlama» belgilanadi). Server va kamera soatlari NTP bilan sinxronlangan boʻlishi kerak.</p>
+{% endblock %}
