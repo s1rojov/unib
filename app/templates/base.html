@@ -4,7 +4,10 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}Davomat{% endblock %} · Yuzni tanish orqali davomat</title>
-  <link rel="stylesheet" href="{% static 'css/app.css' %}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap">
+  <link rel="stylesheet" href="{% asset 'css/app.css' %}">
   {% block head %}{% endblock %}
 </head>
 <body class="{% if user.is_authenticated %}has-shell{% else %}no-shell{% endif %}">
@@ -30,6 +33,11 @@
     <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 3 2 20h20z"/><path d="M12 10v4M12 17h.01"/></symbol>
     <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 4v16l13-8z"/></symbol>
     <symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6M10 11v6M14 11v6"/></symbol>
+    <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-upload" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></symbol>
+    <symbol id="i-user-plus" viewBox="0 0 24 24"><circle cx="10" cy="8" r="4"/><path d="M3 21a7 7 0 0 1 14 0M19 8v6M22 11h-6"/></symbol>
     <symbol id="i-radio" viewBox="0 0 24 24"><circle cx="12" cy="12" r="2.5"/><path d="M16.2 7.8a6 6 0 0 1 0 8.4M7.8 16.2a6 6 0 0 1 0-8.4M19 5a10 10 0 0 1 0 14M5 19A10 10 0 0 1 5 5"/></symbol>
   </defs>
 </svg>
@@ -86,7 +94,16 @@
   <div class="main">
     <header class="topbar">
       <button class="icon-btn menu-btn" id="menu-btn" aria-label="Menyu" aria-controls="sidebar"><svg class="ic"><use href="#i-menu"/></svg></button>
+      {% if user.is_admin %}
+      <form class="tb-search" method="get" action="{% url 'students' %}" role="search">
+        <svg class="ic"><use href="#i-search"/></svg>
+        <label for="tb-q" class="sr-only">Oʻquvchini qidirish</label>
+        <input type="search" id="tb-q" name="q" value="{% if u == 'students' %}{{ request.GET.q }}{% endif %}" placeholder="Oʻquvchini qidiring: ism yoki ID…" autocomplete="off">
+        <kbd>Ctrl K</kbd>
+      </form>
+      {% else %}
       <div class="tb-title">{% block topbar_title %}{% endblock %}</div>
+      {% endif %}
       <span class="spacer"></span>
       <span class="tb-clock" title="Asia/Tashkent"><svg class="ic"><use href="#i-clock"/></svg><span id="tb-clock">{% now "d.m.Y · H:i" %}</span></span>
       <span class="tb-user">
@@ -116,6 +133,10 @@
     } catch (e) {}
   }
   tick(); setInterval(tick, 15000);
+  var q = document.getElementById("tb-q");
+  if (q) document.addEventListener("keydown", function (e) {
+    if ((e.ctrlKey || e.metaKey) && (e.key === "k" || e.key === "K")) { e.preventDefault(); q.focus(); q.select(); }
+  });
 })();
 </script>
 {% else %}
@@ -123,7 +144,7 @@
   {% block auth %}{% endblock %}
 </main>
 {% endif %}
-<script src="{% static 'js/select.js' %}"></script>
+<script src="{% asset 'js/select.js' %}"></script>
 {% block scripts %}{% endblock %}
 </body>
 </html>

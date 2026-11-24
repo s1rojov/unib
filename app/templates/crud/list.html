@@ -4,13 +4,13 @@
 {% block content %}
 <div class="page-head">
   <div><p class="crumbs">{{ r.section }} / {{ r.title }}</p><h1>{{ r.title }}</h1></div>
-  <a class="btn primary" href="{% url r.key|add:'_create' %}">+ Qoʻshish</a>
+  <a class="btn primary" href="{% url r.key|add:'_create' %}"><svg class="ic"><use href="#i-plus"/></svg>Qoʻshish</a>
 </div>
 <div class="card flush">
   <div class="card-head">
     <form method="get" class="row" style="gap:.4rem;flex:1">
       <input type="text" name="q" value="{{ q }}" placeholder="Qidirish…" aria-label="Qidirish" style="flex:1;max-width:320px">
-      <button class="btn">Qidirish</button>{% if q %}<a class="btn" href="?">Tozalash</a>{% endif %}
+      <button class="btn"><svg class="ic"><use href="#i-search"/></svg>Qidirish</button>{% if q %}<a class="btn" href="?">Tozalash</a>{% endif %}
     </form>
     <span class="muted">{{ page.paginator.count }} ta yozuv</span>
   </div>
@@ -25,13 +25,13 @@
           <a class="btn sm danger" href="{% url r.key|add:'_delete' obj.pk %}">Oʻchirish</a>
         </td></tr>
     {% empty %}
-      <tr><td colspan="{{ headers|length|add:1 }}" class="empty">Yozuv yoʻq{% if q %} — «{{ q }}» boʻyicha topilmadi{% endif %}</td></tr>
+      <tr><td colspan="{{ headers|length|add:1 }}"><div class="empty-state"><span class="es-ic"><svg class="ic"><use href="#i-{% if q %}search{% else %}grid{% endif %}"/></svg></span><b>{% if q %}«{{ q }}» boʻyicha topilmadi{% else %}Hali yozuv yoʻq{% endif %}</b><span>{% if q %}Boshqa soʻz bilan qidirib koʻring yoki filtrni tozalang.{% else %}Yangi yozuv qoʻshish uchun «Qoʻshish» tugmasini bosing.{% endif %}</span></div></td></tr>
     {% endfor %}
     </tbody>
   </table>
   </div>
   {% if page.paginator.num_pages > 1 %}
-  <div class="card-head" style="border-top:1px solid var(--border);border-bottom:0">
+  <div class="card-foot">
     <span class="muted small">{{ page.number }} / {{ page.paginator.num_pages }} sahifa</span><span class="spacer"></span>
     {% if page.has_previous %}<a class="btn sm" href="?page={{ page.previous_page_number }}&q={{ q|urlencode }}">← Oldingi</a>{% endif %}
     {% if page.has_next %}<a class="btn sm" href="?page={{ page.next_page_number }}&q={{ q|urlencode }}">Keyingi →</a>{% endif %}

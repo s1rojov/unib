@@ -11,9 +11,9 @@
   <tr><td class="num small">{{ a.at|date:"d.m.Y H:i:s" }}</td><td>{{ a.actor.display_name|default:"tizim" }}</td><td>{{ a.action }}{% if a.after_confirmation %} <span class="badge warn">tasdiqdan keyin</span>{% endif %}</td>
   <td class="small">{{ a.object_type }} #{{ a.object_id }}{% if a.session_id %} · <a href="{% url 'session_report' a.session_id %}">sessiya {{ a.session_id }}</a>{% endif %}</td>
   <td class="small">{{ a.field }}</td><td class="small">{% if a.field or a.old_value or a.new_value %}{{ a.old_value|default:"—" }} → {{ a.new_value|default:"—" }}{% endif %}</td><td class="muted small">{{ a.note }}</td></tr>
-  {% empty %}<tr><td colspan="7" class="muted">Yozuv yoʻq</td></tr>{% endfor %}</tbody>
+  {% empty %}<tr><td colspan="7"><div class="empty-state"><span class="es-ic"><svg class="ic"><use href="#i-audit"/></svg></span><b>Yozuv yoʻq</b><span>Tizimdagi oʻzgarishlar shu jurnalga yoziladi.</span></div></td></tr>{% endfor %}</tbody>
 </table></div>
-<div class="card-head" style="border-top:1px solid var(--border);border-bottom:0">{% if page.has_previous %}<a class="btn sm" href="?page={{ page.previous_page_number }}{% if after %}&after={{ after }}{% endif %}">← Oldingi</a>{% endif %}
+<div class="card-foot">{% if page.has_previous %}<a class="btn sm" href="?page={{ page.previous_page_number }}{% if after %}&after={{ after }}{% endif %}">← Oldingi</a>{% endif %}
 <span class="muted small">{{ page.number }} / {{ page.paginator.num_pages }}</span>
 {% if page.has_next %}<a class="btn sm" href="?page={{ page.next_page_number }}{% if after %}&after={{ after }}{% endif %}">Keyingi →</a>{% endif %}</div></div>
 {% endblock %}

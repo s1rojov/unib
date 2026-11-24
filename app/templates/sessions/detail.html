@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load static %}
+{% load static ui %}
 {% block title %}Sessiya #{{ s.pk }}{% endblock %}
 {% block topbar_title %}Sessiyalar / #{{ s.pk }}{% endblock %}
 {% block content %}
@@ -94,7 +94,7 @@ Tasdiqlashda belgilanmagan kamera natijalari «Keldi», hal qilinmagan yozuvlar 
     <tbody id="rows"><tr><td colspan="7" class="muted">Yuklanmoqda…</td></tr></tbody>
   </table>
   </div>
-  <div class="card-head" style="border-top:1px solid var(--border);border-bottom:0"><svg class="ic muted"><use href="#i-chart"/></svg><span class="muted small" id="worker-info"></span></div>
+  <div class="card-foot"><svg class="ic muted"><use href="#i-chart"/></svg><span class="muted small" id="worker-info"></span></div>
 </div>
 
 <div id="session-config" hidden
@@ -105,5 +105,5 @@ Tasdiqlashda belgilanmagan kamera natijalari «Keldi», hal qilinmagan yozuvlar 
   data-live="{{ s.is_live|yesno:'1,0' }}"></div>
 {% csrf_token %}
 {% endblock %}
-{% block scripts %}<script src="{% static 'js/live.js' %}"></script>
-{% if s.is_live and preview_enabled %}<script src="{% static 'js/cameras.js' %}"></script>{% endif %}{% endblock %}
+{% block scripts %}<script src="{% asset 'js/live.js' %}"></script>
+{% if s.is_live and preview_enabled %}<script src="{% asset 'js/cameras.js' %}"></script>{% endif %}{% endblock %}

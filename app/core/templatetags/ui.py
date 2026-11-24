@@ -40,3 +40,34 @@ def initials(name):
 @register.filter
 def get_item(d, key):
     return d.get(key) if d else None
+
+
+@register.simple_tag
+def asset(path):
+    """Statik fayl URL'i + o'zgarish vaqti (?v=...): fayl yangilansa brauzer keshi avtomatik yangilanadi."""
+    import os
+
+    from django.contrib.staticfiles import finders
+    from django.templatetags.static import static
+
+    url = static(path)
+    if "?" in url:  # manifest storage allaqachon xesh qo'shgan
+        return url
+    found = finders.find(path)
+    try:
+        return f"{url}?v={int(os.path.getmtime(found))}" if found else url
+    except OSError:
+        return url
+
+
+_UZ_DAYS = ["Dushanba", "Seshanba", "Chorshanba", "Payshanba", "Juma", "Shanba", "Yakshanba"]
+_UZ_MONTHS = ["yanvar", "fevral", "mart", "aprel", "may", "iyun", "iyul", "avgust", "sentabr", "oktabr", "noyabr", "dekabr"]
+
+
+@register.simple_tag
+def today_uz():
+    """«Seshanba, 24-noyabr 2026» — brauzer tilidan qat'i nazar o'zbekcha."""
+    from django.utils import timezone
+
+    d = timezone.localdate()
+    return f"{_UZ_DAYS[d.weekday()]}, {d.day}-{_UZ_MONTHS[d.month - 1]} {d.year}"

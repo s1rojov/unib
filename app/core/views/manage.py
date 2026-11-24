@@ -47,7 +47,15 @@ def students(request):
     classes = list(SchoolClass.objects.all())
     class_id = _class_id(request.GET.get("class"), classes)
     cfg = RecognitionSettings.get()
-    rows = _roster(class_id, cfg)
+    q = request.GET.get("q", "").strip()
+    if q:  # yuqori paneldagi qidiruv: barcha sinflar bo'yicha F.I.Sh. yoki ID
+        needle = q.casefold()
+        rows = [
+            r for c in classes for r in _roster(c.pk, cfg)
+            if needle in r["st"].full_name.casefold() or needle in str(r["st"].student_code).casefold()
+        ]
+    else:
+        rows = _roster(class_id, cfg)
     summary = {
         "total": len(rows),
         "ready": sum(1 for r in rows if r["enroll"] == "ready"),
@@ -55,7 +63,7 @@ def students(request):
         "none": sum(1 for r in rows if r["enroll"] == "none"),
     }
     return render(request, "manage/students.html", {
-        "classes": classes, "class_id": class_id, "rows": rows, "cfg": cfg, "summary": summary,
+        "classes": classes, "class_id": class_id, "rows": rows, "cfg": cfg, "summary": summary, "q": q,
         "import_form": StudentImportForm(initial={"school_class": class_id}),
     })
 

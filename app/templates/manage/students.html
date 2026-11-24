@@ -8,7 +8,7 @@
   {% if classes %}
   <div class="row">
     <a class="btn" href="{% url 'photos' %}{% if class_id %}?class={{ class_id }}{% endif %}"><svg class="ic"><use href="#i-face"/></svg>Yuz rasmlari</a>
-    <a class="btn primary" href="{% url 'oquvchilar_create' %}{% if class_id %}?school_class={{ class_id }}{% endif %}">+ Oʻquvchi qoʻshish</a>
+    <a class="btn primary" href="{% url 'oquvchilar_create' %}{% if class_id %}?school_class={{ class_id }}{% endif %}"><svg class="ic"><use href="#i-user-plus"/></svg>Oʻquvchi qoʻshish</a>
   </div>
   {% endif %}
 </div>
@@ -27,7 +27,7 @@
 {% else %}
 
 <div class="filters">
-  {% for c in classes %}<a class="chip {% if c.pk == class_id %}active{% endif %}" href="?class={{ c.pk }}">{{ c.name }} <span class="small" style="opacity:.7">{{ c.academic_year }}</span></a>{% endfor %}
+  {% for c in classes %}<a class="chip {% if c.pk == class_id and not q %}active{% endif %}" href="?class={{ c.pk }}">{{ c.name }} <span class="small" style="opacity:.7">{{ c.academic_year }}</span></a>{% endfor %}
   <a class="chip" href="{% url 'sinflar_create' %}" title="Yangi sinf">+</a>
 </div>
 
@@ -39,15 +39,17 @@
 </div>
 
 <div class="card flush">
-  <div class="card-head"><h2>Sinf roʻyxati</h2><span class="muted">{{ rows|length }} ta oʻquvchi</span>
+  <div class="card-head">{% if q %}<h2>«{{ q }}» boʻyicha qidiruv</h2><span class="muted">{{ rows|length }} ta oʻquvchi · barcha sinflar</span>
+    <span class="spacer"></span><a class="btn sm" href="?class={{ class_id }}">Tozalash</a>
+    {% else %}<h2>Sinf roʻyxati</h2><span class="muted">{{ rows|length }} ta oʻquvchi</span>
     <span class="spacer"></span>
-    <a class="btn sm" href="{% url 'oquvchilar_create' %}?school_class={{ class_id }}">+ Qoʻshish</a></div>
+    <a class="btn sm" href="{% url 'oquvchilar_create' %}?school_class={{ class_id }}"><svg class="ic"><use href="#i-plus"/></svg>Qoʻshish</a>{% endif %}</div>
   <div class="table-wrap"><table>
     <thead><tr><th>№</th><th>F.I.Sh.</th><th class="hide-sm">ID</th><th>Yuz rasmlari</th><th style="text-align:right">Amallar</th></tr></thead>
     <tbody>{% for r in rows %}
     <tr>
       <td class="num muted">{{ forloop.counter }}</td>
-      <td class="cell-main">{{ r.st.full_name }}{% if not r.st.is_active %} <span class="badge">nofaol</span>{% endif %}</td>
+      <td><span class="cell-main">{{ r.st.full_name }}</span>{% if not r.st.is_active %} <span class="badge">nofaol</span>{% endif %}{% if q %}<span class="cell-sub">{{ r.st.school_class }}</span>{% endif %}</td>
       <td class="hide-sm num muted">{{ r.st.student_code }}</td>
       <td>{% if r.enroll == 'ready' %}<span class="badge ok">{{ r.templates }} ta — tayyor</span>{% elif r.enroll == 'partial' %}<span class="badge warn">{{ r.templates }} ta — yetarli emas</span>{% else %}<span class="badge bad">yoʻq</span>{% endif %}</td>
       <td style="text-align:right;white-space:nowrap">
@@ -56,7 +58,9 @@
       </td>
     </tr>
     {% empty %}
-    <tr><td colspan="5" class="empty">Bu sinfda hali oʻquvchi yoʻq. <a href="{% url 'oquvchilar_create' %}?school_class={{ class_id }}">Oʻquvchi qoʻshing</a> yoki quyida roʻyxatni fayldan yuklang.</td></tr>
+    <tr><td colspan="5"><div class="empty-state"><span class="es-ic teal"><svg class="ic"><use href="#i-{% if q %}search{% else %}students{% endif %}"/></svg></span>
+      {% if q %}<b>«{{ q }}» boʻyicha oʻquvchi topilmadi</b><span>Ism, familiya yoki ID ni tekshirib qayta qidiring.</span>
+      {% else %}<b>Bu sinfda hali oʻquvchi yoʻq</b><span><a href="{% url 'oquvchilar_create' %}?school_class={{ class_id }}">Oʻquvchi qoʻshing</a> yoki quyida roʻyxatni fayldan yuklang.</span>{% endif %}</div></td></tr>
     {% endfor %}</tbody>
   </table></div>
 </div>

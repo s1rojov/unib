@@ -1,14 +1,25 @@
-<div class="card flush">
-  <div class="card-head"><h2>Faol sessiyalar</h2><span class="spacer"></span><span class="badge {% if live_sessions %}ok{% endif %}">{{ live_sessions|length }}</span></div>
+<section class="card flush">
+  <div class="card-head">
+    <h2>Faol sessiyalar</h2>
+    <span class="count-pill dot {% if live_sessions %}ok{% endif %}">{{ live_sessions|length }} ta</span>
+    <span class="spacer"></span>
+    <a class="link-strong" href="{% if user.is_admin %}{% url 'manage_sessions' %}?status=live{% else %}{% url 'session_list' %}{% endif %}">Hammasini koʻrish</a>
+  </div>
+  {% if live_sessions %}
   <ul class="list">
   {% for s in live_sessions %}
-    <li style="padding:0"><a class="list-link row" style="flex:1;padding:.75rem 1.25rem;flex-wrap:nowrap" href="{% url 'session_detail' s.pk %}">
-      <span class="l-ic {% if s.status == 'active' %}ok{% elif s.status == 'disconnected' %}bad{% endif %}"><svg class="ic"><use href="#i-sessions"/></svg></span>
+    <li style="padding:0"><a class="list-link row" style="flex:1;padding:12px 22px;flex-wrap:nowrap" href="{% url 'session_detail' s.pk %}">
+      <span class="l-ic {% if s.status == 'active' %}ok{% elif s.status == 'disconnected' %}bad{% else %}warn{% endif %}"><svg class="ic"><use href="#i-radio"/></svg></span>
       <span class="l-main"><b>{{ s.school_class }}</b><span>{{ s.room }} · {{ s.started_at|date:"H:i" }} dan</span></span>
       <span class="badge {% if s.status == 'active' %}ok{% elif s.status == 'disconnected' %}bad{% else %}warn{% endif %}">{{ s.status_label }}</span>
     </a></li>
-  {% empty %}
-    <li class="empty" style="display:block">Hozir faol sessiya yoʻq</li>
   {% endfor %}
   </ul>
-</div>
+  {% else %}
+  <div class="empty-state">
+    <span class="es-ic violet"><svg class="ic"><use href="#i-radio"/></svg></span>
+    <b>Hozir faol sessiya yoʻq</b>
+    <span>Dars boshlanganda sessiya shu yerda jonli koʻrinadi: kelganlar soni va kamera holati bilan.</span>
+  </div>
+  {% endif %}
+</section>

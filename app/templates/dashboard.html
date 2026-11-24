@@ -1,78 +1,126 @@
 {% extends "base.html" %}
+{% load ui %}
 {% block title %}Bosh sahifa{% endblock %}
 {% block topbar_title %}Bosh sahifa{% endblock %}
 {% block content %}
 <div class="page-head">
-  <div><h1>Assalomu alaykum, {{ user.display_name }}</h1>
-  <p class="muted">{% now "d.m.Y" %} · bugungi darslar va tizim holati</p></div>
+  <div>
+    <p class="crumbs">Bosh sahifa</p>
+    <h1>Assalomu alaykum, {{ user.display_name }}</h1>
+    <p class="muted">{% today_uz %} · bugungi darslar va tizim holati</p>
+  </div>
   <div class="row">
     <a class="btn" href="{% url 'session_list' %}"><svg class="ic"><use href="#i-sessions"/></svg>Barcha sessiyalar</a>
     {% if user.is_admin %}<a class="btn primary" href="{% url 'cameras' %}"><svg class="ic"><use href="#i-camera"/></svg>Kameralar nazorati</a>{% endif %}
   </div>
 </div>
 
-<div class="stats">
+<section class="stats" aria-label="Bugungi koʻrsatkichlar">
   <div class="stat"><span class="ic-wrap"><svg class="ic"><use href="#i-sessions"/></svg></span>
-    <div class="v">{{ today_count }}</div><div class="l">Bugungi sessiyalar</div></div>
+    <div class="v">{{ today_count }}</div><div class="l">Bugungi sessiyalar</div><div class="s">Bugun boshlangan darslar</div></div>
   <div class="stat ok"><span class="ic-wrap"><svg class="ic"><use href="#i-check"/></svg></span>
-    <div class="v">{{ today_present }}<span class="muted small" style="font-weight:500"> / {{ today_total }}</span></div><div class="l">Bugun kelganlar</div></div>
-  <div class="stat"><span class="ic-wrap"><svg class="ic"><use href="#i-play"/></svg></span>
-    <div class="v">{{ live_sessions|length }}</div><div class="l">Faol sessiyalar</div></div>
-  <div class="stat {% if pending_confirm %}warn{% endif %}"><span class="ic-wrap"><svg class="ic"><use href="#i-alert"/></svg></span>
-    <div class="v">{{ pending_confirm }}</div><div class="l">Tasdiqlash kutilmoqda</div></div>
+    <div class="v">{{ today_present }} <small>/ {{ today_total }}</small></div><div class="l">Bugun kelganlar</div>
+    <div class="bar ok" role="img" aria-label="Bugun kelganlar ulushi"><span style="width:{% if today_total %}{% widthratio today_present today_total 100 %}{% else %}0{% endif %}%"></span></div></div>
+  <div class="stat violet"><span class="ic-wrap"><svg class="ic"><use href="#i-play"/></svg></span>
+    <div class="v">{{ live_sessions|length }}</div><div class="l">Faol sessiyalar</div><div class="s">Hozir jonli</div></div>
+  <div class="stat warn"><span class="ic-wrap"><svg class="ic"><use href="#i-alert"/></svg></span>
+    <div class="v">{{ pending_confirm }}</div><div class="l">Tasdiqlash kutilmoqda</div><div class="s">Qoʻlda tekshiruv</div></div>
   {% if user.is_admin %}
-  <div class="stat"><span class="ic-wrap"><svg class="ic"><use href="#i-students"/></svg></span>
-    <div class="v">{{ student_count }}</div><div class="l">Faol oʻquvchilar</div></div>
+  <div class="stat teal"><span class="ic-wrap"><svg class="ic"><use href="#i-students"/></svg></span>
+    <div class="v">{{ student_count }}</div><div class="l">Faol oʻquvchilar</div><div class="s">Bazada roʻyxatda</div></div>
   {% endif %}
-</div>
+</section>
 
-<div class="cols-2 even">
+<div class="dash-cols">
+  <div>
+    {% include "_live_sessions_card.html" %}
+
+    <section class="card flush">
+      <div class="card-head">
+        <h2>Soʻnggi sessiyalar</h2><span class="spacer"></span>
+        <a class="btn sm soft" href="{% url 'session_list' %}">Hammasi<svg class="ic"><use href="#i-arrow"/></svg></a>
+      </div>
+      {% include "sessions/_table.html" with bare=1 %}
+    </section>
+  </div>
+
   <div>
     {% if user.is_teacher %}
-    <div class="card flush">
+    <section class="card flush">
       <div class="card-head"><h2>Yangi sessiya</h2></div>
       <div class="card-body">
       {% if start_form.fields.assignment.queryset %}
       <form method="post" action="{% url 'session_start' %}">
         {% csrf_token %}
-        <div class="row">{{ start_form.assignment }}
-        <button class="btn primary" type="submit"><svg class="ic"><use href="#i-play"/></svg>Sessiyani boshlash</button></div>
-        <label class="small row" style="gap:.4rem;font-weight:500;margin-top:.75rem" title="{{ start_form.pilot_blind.help_text }}">{{ start_form.pilot_blind }} {{ start_form.pilot_blind.label }}</label>
+        <div class="field" style="margin-bottom:12px"><label for="{{ start_form.assignment.id_for_label }}">Sinf va xona</label>{{ start_form.assignment }}</div>
+        <label class="small row" style="gap:8px;font-weight:500;margin-bottom:16px" title="{{ start_form.pilot_blind.help_text }}">{{ start_form.pilot_blind }} {{ start_form.pilot_blind.label }}</label>
+        <button class="btn primary block" type="submit"><svg class="ic"><use href="#i-play"/></svg>Sessiyani boshlash</button>
       </form>
-      <p class="muted small" style="margin:.75rem 0 0">Sessiya boshlangach tizim xona kamerasiga avtomatik ulanadi.</p>
+      <p class="muted small" style="margin:12px 0 0">Sessiya boshlangach tizim xona kamerasiga avtomatik ulanadi.</p>
       {% else %}
-      <p class="muted" style="margin:0">Sizga hali sinf va xona biriktirilmagan. Administratorga murojaat qiling.</p>
+      <div class="empty-state" style="padding:16px 8px">
+        <span class="es-ic"><svg class="ic"><use href="#i-link"/></svg></span>
+        <b>Sinf biriktirilmagan</b>
+        <span>Sizga hali sinf va xona biriktirilmagan. Administratorga murojaat qiling.</span>
+      </div>
       {% endif %}
       </div>
-    </div>
-    {% else %}
-    {% include "_live_sessions_card.html" %}
+    </section>
     {% endif %}
-  </div>
-  <div>
-    {% if user.is_teacher %}
-    {% include "_live_sessions_card.html" %}
-    {% else %}
-    <div class="card flush">
-      <div class="card-head"><h2>Kameralar</h2><span class="spacer"></span><a class="btn sm" href="{% url 'kameralar_create' %}">+ Qoʻshish</a></div>
-      <ul class="list">
-      {% for c in cameras %}
-        <li>
-          <span class="l-ic {% if c.status == 'online' %}ok{% elif c.status == 'offline' %}bad{% endif %}"><svg class="ic"><use href="#i-camera"/></svg></span>
-          <span class="l-main"><b>{{ c.name }}</b><span>{{ c.room }} · {{ c.masked_url }}</span></span>
-          <span class="badge {% if c.status == 'online' %}ok{% elif c.status == 'offline' %}bad{% endif %}">{{ c.get_status_display }}</span>
-        </li>
-      {% empty %}
-        <li class="empty" style="display:block">Kamera qoʻshilmagan. <a href="{% url 'kameralar_create' %}">Qoʻshish</a></li>
-      {% endfor %}
-      </ul>
-    </div>
-    {% endif %}
-  </div>
-</div>
 
-<div class="card flush">
-  <div class="card-head"><h2>Soʻnggi sessiyalar</h2><span class="spacer"></span><a class="btn sm" href="{% url 'session_list' %}">Hammasi →</a></div>
-  {% include "sessions/_table.html" with bare=1 %}
+    {% if user.is_admin %}
+    <section class="card flush">
+      <div class="card-head">
+        <h2>Kameralar</h2><span class="count-pill">{{ cameras|length }} ta</span>
+        <span class="spacer"></span>
+        <a class="btn sm" href="{% url 'kameralar_create' %}"><svg class="ic"><use href="#i-plus"/></svg>Qoʻshish</a>
+      </div>
+      {% if cameras %}
+      <div class="cam-cards">
+      {% for c in cameras %}
+        <div class="cam-card">
+          <div class="cam-thumb {% if c.status == 'online' %}ok{% elif c.status == 'offline' %}bad{% endif %}">
+            <svg class="ic"><use href="#i-camera"/></svg>
+            <span>{% if c.status == 'online' %}Oqim ulangan{% elif c.status == 'offline' %}Oqim uzilgan{% else %}Oqim tekshirilmagan{% endif %}</span>
+          </div>
+          <div class="cam-meta">
+            <div>
+              <b>{{ c.name }}</b>
+              <span class="small" style="color:var(--text-2)">{{ c.room }}</span>
+              <span class="mono" title="{{ c.masked_url }}">{{ c.masked_url }}</span>
+            </div>
+            <span class="row" style="gap:6px;flex-wrap:nowrap">
+              {% if not c.is_active %}<span class="badge">nofaol</span>{% endif %}
+              <span class="badge {% if c.status == 'online' %}ok{% elif c.status == 'offline' %}bad{% else %}warn{% endif %}">{{ c.get_status_display }}</span>
+            </span>
+          </div>
+          <div class="row" style="gap:8px">
+            <a class="btn sm" style="flex:1" href="{% url 'cameras' %}">Nazoratda ochish</a>
+            <a class="btn sm" href="{% url 'kameralar_edit' c.pk %}">Sozlash</a>
+          </div>
+        </div>
+      {% endfor %}
+      </div>
+      {% else %}
+      <div class="empty-state">
+        <span class="es-ic teal"><svg class="ic"><use href="#i-camera"/></svg></span>
+        <b>Kamera qoʻshilmagan</b>
+        <span>Xona kamerasini qoʻshing — kompyuter kamerasi uchun manzilga <b>0</b> yozing.</span>
+        <a class="btn sm primary" style="margin-top:6px" href="{% url 'kameralar_create' %}"><svg class="ic"><use href="#i-plus"/></svg>Kamera qoʻshish</a>
+      </div>
+      {% endif %}
+    </section>
+
+    <section class="card">
+      <h2 style="margin:0 0 14px">Tezkor amallar</h2>
+      <div class="quick">
+        <a class="q-item" href="{% url 'oquvchilar_create' %}"><span class="q-ic"><svg class="ic"><use href="#i-user-plus"/></svg></span>Oʻquvchi qoʻshish</a>
+        <a class="q-item" href="{% url 'photos' %}"><span class="q-ic teal"><svg class="ic"><use href="#i-upload"/></svg></span>Yuz rasmi yuklash</a>
+        <a class="q-item" href="{% url 'sinflar_list' %}"><span class="q-ic violet"><svg class="ic"><use href="#i-class"/></svg></span>Sinflar</a>
+        <a class="q-item" href="{% url 'pilot' %}"><span class="q-ic ok"><svg class="ic"><use href="#i-chart"/></svg></span>Pilot metrikalari</a>
+      </div>
+    </section>
+    {% endif %}
+  </div>
 </div>
 {% endblock %}

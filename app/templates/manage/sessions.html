@@ -70,7 +70,7 @@
           </td>
         </tr>
       {% empty %}
-        <tr><td colspan="7" class="empty">{% if has_filters or status %}Bu filtr boʻyicha sessiya topilmadi{% else %}Hali sessiya oʻtkazilmagan{% endif %}</td></tr>
+        <tr><td colspan="7"><div class="empty-state"><span class="es-ic"><svg class="ic"><use href="#i-sessions"/></svg></span><b>{% if has_filters or status %}Bu filtr boʻyicha sessiya topilmadi{% else %}Hali sessiya oʻtkazilmagan{% endif %}</b><span>{% if has_filters or status %}Filtrni oʻzgartiring yoki tozalang.{% else %}Oʻqituvchi dars boshlaganda sessiyalar shu yerda paydo boʻladi.{% endif %}</span></div></td></tr>
       {% endfor %}
       </tbody>
     </table>
@@ -78,7 +78,7 @@
   </form>
   <form method="post" action="{% url 'sessions_delete' %}" id="del-one">{% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}"></form>
 
-  <div class="card-head" style="border-top:1px solid var(--border);border-bottom:0">
+  <div class="card-foot">
     <span class="muted small">{{ page.paginator.count }} ta sessiya{% if page.paginator.num_pages > 1 %} · {{ page.number }} / {{ page.paginator.num_pages }} sahifa{% endif %}</span>
     <span class="spacer"></span>
     {% if page.has_previous %}<a class="btn sm" href="?{{ qs_keep }}{% if qs_keep %}&{% endif %}page={{ page.previous_page_number }}">← Oldingi</a>{% endif %}
